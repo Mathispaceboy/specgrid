@@ -1,0 +1,17 @@
+name = "specgrid-api"
+main = "worker.js"
+compatibility_date = "2026-08-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "specgrid-db"
+database_id = "d91ecc07-a703-4b4b-bd18-1942b288c27b"
+
+# Optional: Cloudflare Rate Limiting binding referenced in worker.js as
+# env.RATE_LIMITER. Uncomment and configure if/when you add a rate limiting
+# rule in the dashboard (Workers & Pages > your worker > Settings > Bindings).
+# [[unsafe.bindings]]
+# name = "RATE_LIMITER"
+# type = "ratelimit"
+# namespace_id = "<set from dashboard>"
+# simple = { limit = 10, period = 60 }

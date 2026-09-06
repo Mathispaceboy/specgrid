@@ -1,0 +1,15 @@
+name = "specgrid-web"
+main = "worker.js"
+compatibility_date = "2026-08-01"
+
+# specgrid.in and www.specgrid.in are attached to this Worker as custom domains
+# in the Cloudflare dashboard (Workers & Pages > specgrid-web > Settings >
+# Domains & Routes) — not managed via wrangler.toml routes here, to keep this
+# config safe to reuse across environments.
+
+# Optional (recommended follow-up, not yet wired): bind specgrid-api as a
+# service binding instead of calling its public .workers.dev URL over the
+# network. This is faster and keeps the API from needing to be public at all.
+# [[services]]
+# binding = "API"
+# service = "specgrid-api"
