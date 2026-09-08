@@ -1,99 +1,109 @@
 # SpecGrid
 
-India's technical manufacturer directory. specgrid.in
+> **India's Technical Manufacturer Directory** — [https://specgrid.in](https://specgrid.in)
 
-This repo is a **fresh git source of truth**, reconstructed on 2026-09-05 directly
-from what was actually live in Cloudflare at the time (not from any prior repo).
-The previous GitHub repo mixed in an unrelated `cloudflare/` folder from the
-deferred Intelligence Radar project and had drifted from production — this repo
-intentionally starts clean.
+SpecGrid indexes verified engineering and manufacturing capabilities across industrial clusters (machine locking force, operating voltages, steel alloys, testing standards) and connects technical buyers and EPC engineers directly with factories.
 
-## Structure
+---
 
+## 🚀 Key Highlights & Architecture
+
+- **Web Frontend (`web/`)**: Built on **Astro 5 (SSR)** deployed to Cloudflare Workers with `@astrojs/cloudflare`. Features fast server-side rendering, monospace design system, paginated directory search, specification shortcuts, and direct inquiry routing.
+- **Content Engine (`web/src/content/radar/`)**: **SpecGrid Intelligence Radar** — in-depth procurement guides and regional manufacturing cluster teardowns powered by Astro Content Collections.
+- **API Engine (`api/`)**: REST API Worker deployed to Cloudflare Workers (`specgrid-api`). Handles fuzzy/deep parameter searches across companies, products, specifications JSON, and certifications.
+- **Database (`db/`)**: **Cloudflare D1** (`specgrid-db`), holding 189 verified manufacturers, 194 detailed product specification sheets, and 114 type-test certifications (CPRI, ERDA, UL, NABL, IS 1180, ISO).
+
+---
+
+## 📁 Repository Structure
+
+```text
+specgrid/
+├── wrangler.jsonc             # Root configuration for Cloudflare Git CI pipeline
+├── DEVICE_MIGRATION_GUIDE.md  # Detailed setup guide for new machines & environments
+├── web/                       # Astro 5 SSR application (specgrid-web)
+│   ├── astro.config.mjs       # Astro config with Cloudflare adapter & redirects
+│   ├── wrangler.toml          # Web worker configuration & D1 database binding
+│   ├── src/
+│   │   ├── content/radar/     # Intelligence Radar technical articles
+│   │   ├── pages/             # SSR routes (/search, /companies/[slug], /radar, etc.)
+│   │   ├── components/        # UI components (Header, Footer)
+│   │   ├── layouts/           # BaseLayout with SEO, JSON-LD, OpenGraph
+│   │   └── styles/            # Design tokens and monospace styling
+│   └── data/
+│       └── master_technical_database.md # 189-company master reference dataset
+├── api/                       # REST API Worker (specgrid-api)
+│   ├── worker.js              # Full API router with JWT verification
+│   └── wrangler.toml          # API worker Cloudflare configuration
+├── db/                        # Database schemas, scripts, and complete snapshots
+│   ├── schema.sql             # Table definitions & indexes
+│   ├── ingest_technical_specs.sql # Product & specification transaction batch
+│   └── backup_live_database.sql   # Complete SQL dump of production D1 database
+└── scripts/                   # Migration & ingestion automation scripts
+    └── ingest_technical_specs.js
 ```
-web/            The specgrid-web Worker — renders every public HTML page
-                 (homepage, search, company profiles, claim flow, account,
-                 admin, legal pages) and proxies to the API.
-  worker.js
-  wrangler.toml
 
-api/            The specgrid-api Worker — the JSON API (search, companies,
-                 claims, enquiries, analytics, admin endpoints). Auth is Clerk,
-                 verified via JWKS (no secret key required for verification).
-  worker.js
-  wrangler.toml
+---
 
-db/
-  schema.sql    Exact CREATE TABLE + index statements pulled from the LIVE
-                 production D1 database (specgrid-db) on 2026-09-05. This is
-                 now the source of truth — the old staging database
-                 (specgrid-db-staging) had drifted (missing founding_members /
-                 sessions / visitor_identities; had an unrelated radar_posts
-                 table from Intelligence Radar) and should not be used as a
-                 reference going forward.
+## ⚡ Quick Start on a New Device
+
+For complete instructions, see [DEVICE_MIGRATION_GUIDE.md](./DEVICE_MIGRATION_GUIDE.md).
+
+### 1. Install & Run Web App
+```bash
+cd web
+npm install
+npm run dev
+```
+Runs locally at `http://localhost:4321`.
+
+### 2. Run API Worker
+```bash
+cd api
+npx wrangler dev --remote
+```
+Runs locally at `http://localhost:8787` connected to the remote D1 database.
+
+---
+
+## 💾 Database State & Backups
+
+- **Cloudflare D1 Database Name**: `specgrid-db`
+- **Database ID**: `d91ecc07-a703-4b4b-bd18-1942b288c27b`
+
+The latest production database dump is saved in version control:
+- [`db/backup_live_database.sql`](./db/backup_live_database.sql) — Contains all table schemas and live records for `companies`, `products`, `certifications`, `categories`, `enquiries`, `company_claims`, `users`, and `audit_logs`.
+
+To restore or seed a local or remote database:
+```bash
+# Seed local offline database:
+npx wrangler d1 execute specgrid-db --local --file=db/backup_live_database.sql
+
+# Restore remote production database:
+npx wrangler d1 execute specgrid-db --remote --file=db/backup_live_database.sql
 ```
 
-## Known gaps in this reconstruction (fix before or shortly after first deploy)
+---
 
-1. **OG image not re-embedded.** The live Worker embeds a ~9KB base64 PNG as
-   `OG_IMAGE_B64` in `web/worker.js`. That exact binary was not hand-transcribed
-   into this repo (too error-prone to copy by hand). `OG_IMAGE_B64` is currently
-   an empty string, so `/og-default.png` will serve a broken image until you
-   either fetch the live one from `https://specgrid.in/og-default.png` and
-   paste it in base64, or generate a fresh one.
-2. **No GitHub Actions / CI yet.** Deploy today via Cloudflare's native Git
-   integration (see below) — no build step is needed since these are
-   plain-JS Workers with no bundler.
-3. **`specgrid-web` calls `specgrid-api` over its public `.workers.dev` URL**
-   rather than a service binding. Works fine, but a service binding (commented
-   out in `web/wrangler.toml`) would be faster and avoid exposing the API
-   publicly. Not urgent.
-4. **No secrets are needed for the current feature set.** Clerk auth in
-   `api/worker.js` verifies JWTs against Clerk's public JWKS endpoint — there
-   is no Clerk secret key in this codebase to manage. The one Clerk key in
-   `web/worker.js` (`CLERK_PUBLISHABLE_KEY`) is a *publishable* key, safe to
-   keep in source. If you add Razorpay or any other integration that needs a
-   real secret, set it via `wrangler secret put <NAME>` or the Cloudflare
-   dashboard — never hardcode it in `worker.js`.
+## 🚢 Deployment
 
-## First-time setup
+### Automatic Git CI/CD
+Cloudflare's Git pipeline builds and deploys on every push to `main` using root `wrangler.jsonc`.
 
-1. **Create the GitHub repo** (if not already done) and push this folder:
-   ```
-   cd specgrid
-   git init
-   git add .
-   git commit -m "Initial commit: reconstructed from live production, 2026-09-05"
-   git branch -M main
-   git remote add origin https://github.com/<your-username>/specgrid.git
-   git push -u origin main
-   ```
+### Manual CLI Deploy
+```bash
+# Deploy Web Worker:
+npx wrangler deploy
 
-2. **Connect both Workers to this repo** in the Cloudflare dashboard:
-   - Workers & Pages → `specgrid-web` → Settings → Builds & deployments →
-     connect to this repo, root directory `web/`.
-   - Workers & Pages → `specgrid-api` → Settings → Builds & deployments →
-     connect to this repo, root directory `api/`.
-   - Every push to `main` will now auto-deploy. No build command needed
-     (plain JS, no bundler) — just "deploy on push."
+# Deploy API Worker:
+cd api && npx wrangler deploy -c wrangler.toml
+```
 
-3. **Point specgrid.in's custom domain** at `specgrid-web` if it isn't already
-   (Workers & Pages → specgrid-web → Settings → Domains & Routes).
+---
 
-4. **D1 database**: already exists and is bound in `api/wrangler.toml`
-   (`specgrid-db`, id `d91ecc07-a703-4b4b-bd18-1942b288c27b`). Nothing to
-   recreate — this repo's `db/schema.sql` is documentation of its current
-   shape, not a script you need to (re-)run against production.
+## 🌐 Production URLs
 
-5. **Local development**: clone this repo, `cd api && wrangler dev` /
-   `cd web && wrangler dev` to run either Worker locally. Point `API_BASE` in
-   `web/worker.js` at `http://localhost:8787` temporarily if you want to test
-   against a local API instance.
-
-## Notes on the old `specgrid-staging` / `specgrid-api-staging` Workers
-
-These still exist in the Cloudflare account with a drifted schema (missing 3
-production tables, plus an unrelated `radar_posts` table). They are not
-touched by this repo or its deploy setup. Decide separately whether to
-delete them, reset them to match production, or repurpose them as a real
-staging environment once Intelligence Radar becomes an active project again.
+- **Live Application**: [https://specgrid.in](https://specgrid.in)
+- **Technical Directory**: [https://specgrid.in/search](https://specgrid.in/search)
+- **Intelligence Radar**: [https://specgrid.in/radar](https://specgrid.in/radar)
+- **API Worker**: `https://specgrid-api.mathispaceboy.workers.dev`
