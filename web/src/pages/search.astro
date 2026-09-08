@@ -23,7 +23,7 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
 
 <BaseLayout
   title="Search — SpecGrid"
-  description="Search India's technical manufacturers by product, category, location, company type, and certification."
+  description="Search India's technical manufacturers by process, machine tonnage, alloy grade, company type, and certification."
   canonicalPath="/search"
 >
   <div class="search-page wrap">
@@ -40,7 +40,7 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
             name="q"
             type="text"
             autocomplete="off"
-            placeholder="Search manufacturers, products, specs..."
+            placeholder='Search "800T die casting", "CNC precision machining", "switchgear", "pumps"...'
             class="search-input"
           />
           <button type="submit" class="btn btn-primary search-submit-btn" aria-label="Search">
@@ -49,6 +49,7 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
         </div>
       </form>
     </section>
+
 
     <!-- Main Layout Grid: Facets Sidebar + Results Stream -->
     <div class="search-layout">

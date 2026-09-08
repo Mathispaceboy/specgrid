@@ -14,12 +14,13 @@ const websiteJsonLd = {
 };
 
 const popularChips = [
+  { label: "Die Casting & Foundry", href: "/search?category=die-casting" },
+  { label: "Precision Machining & CNC", href: "/search?category=precision-machining" },
+  { label: "Tooling & Molds", href: "/search?category=tooling-molds" },
   { label: "Switchgear & Panels", href: "/search?category=switchgear" },
-  { label: "Solar Energy", href: "/search?category=solar" },
-  { label: "Cables & Accessories", href: "/search?category=cables" },
-  { label: "Transformers", href: "/search?category=transformers" },
   { label: "Automation & Controls", href: "/search?category=automation" },
-  { label: "Tamil Nadu", href: "/search?state=Tamil%20Nadu" },
+  { label: "Solar Energy", href: "/search?category=solar" },
+  { label: "Coimbatore", href: "/search?q=Coimbatore" },
 ];
 
 const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
@@ -27,7 +28,7 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
 
 <BaseLayout
   title="SpecGrid — India's Technical Manufacturer Directory"
-  description="Search India's technical manufacturers by product, voltage class, IP rating, and certification. Real specs, not just names and phone numbers."
+  description="Search India's technical manufacturers by process, machine tonnage, alloy grade, and certification. Direct engineering specs for die casting, precision machining, tooling, switchgear, and automation."
   canonicalPath="/"
   jsonLd={websiteJsonLd}
 >
@@ -37,8 +38,8 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
       <div class="wrap">
         <div class="titleblock" style="margin-bottom: 28px;">
           <div>Directory<strong>Capability Index // India</strong></div>
-          <div>Cluster<strong>Industrial Electrical &amp; Power</strong></div>
-          <div>Filter Engine<strong>Voltage &middot; IP &middot; Standard</strong></div>
+          <div>Cluster<strong>Precision Engineering &amp; Manufacturing</strong></div>
+          <div>Filter Engine<strong>Tonnage &middot; Process &middot; Material &middot; Standard</strong></div>
           <div>Index<strong>Direct Sourcing</strong></div>
         </div>
 
@@ -49,7 +50,7 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
 
         <h1 class="hero-title">Find who actually makes it.</h1>
         <p class="hero-lead">
-          Search by product, voltage class, IP rating or certification &mdash; and get real manufacturers, not ten identical-looking listing cards.
+          Search by machine tonnage, casting process, material grade, or certification &mdash; find verified die casters, precision CNC machinists, tooling makers, and industrial equipment builders with verified capabilities.
         </p>
 
         <!-- Search Form -->
@@ -63,7 +64,7 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
               name="q"
               type="text"
               autocomplete="off"
-              placeholder='Try "36kV VCB Coimbatore" or "IP65 solar inverter, ISO certified"'
+              placeholder='Try "800T die casting Coimbatore", "ADC12 automotive casting", or "CNC precision machining"'
               class="search-input"
             />
             <button type="submit" class="btn btn-primary search-btn" aria-label="Search">
@@ -108,9 +109,10 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
               </svg>
             </div>
             <div class="trust-text">
-              Filterable by <strong>voltage &middot; IP rating &middot; certification</strong>
+              Filterable by <strong>tonnage &middot; process &middot; material &middot; certification</strong>
             </div>
           </div>
+
 
           <div class="trust-item">
             <div class="trust-check">

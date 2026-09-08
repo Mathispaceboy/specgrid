@@ -139,7 +139,128 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
             '</div>' +
             '<div id="foundingMsg" class="form-msg"></div>' +
           '</form>' +
+        '</div>' +
+
+        '<!-- 5. Quick-Add Manufacturer Intake (CODISSIA & Expo Onboarding) -->' +
+        '<div class="admin-card quick-add-card">' +
+          '<div class="card-label mono">05 // Quick-Add Manufacturer Intake &middot; CODISSIA &amp; Expos</div>' +
+          '<h2 class="card-title" style="font-size: 18px;">Quick-Add Manufacturer</h2>' +
+          '<p class="card-sub">Fast on-the-fly intake for exhibitors met at CODISSIA (e.g. Inter Die Casting Expo) and industrial expos. Generates live catalog profile, Spec ID, and 1-tap WhatsApp follow-up link.</p>' +
+
+          '<div class="preset-group">' +
+            '<span class="mono" style="font-size: 11.5px; color: var(--ink-soft); display: block; margin-bottom: 6px;">Expo Quick Presets:</span>' +
+            '<div class="preset-buttons">' +
+              '<button type="button" class="btn btn-ghost btn-sm preset-btn" data-preset="die-casting">Inter Die Casting Expo</button>' +
+              '<button type="button" class="btn btn-ghost btn-sm preset-btn" data-preset="machining">Precision CNC Machining</button>' +
+              '<button type="button" class="btn btn-ghost btn-sm preset-btn" data-preset="tooling">Tooling &amp; Mold Maker</button>' +
+              '<button type="button" class="btn btn-ghost btn-sm preset-btn" data-preset="switchgear">Switchgear &amp; Power</button>' +
+            '</div>' +
+          '</div>' +
+
+          '<form id="quickAddForm" class="admin-form" style="margin-top: 18px;">' +
+            '<div class="fld-grid">' +
+              '<div class="fld">' +
+                '<label for="qa_name" class="fld-label mono">Company Name <span class="req">*</span></label>' +
+                '<input id="qa_name" required class="fld-input" placeholder="e.g. Apex Die Castings" />' +
+              '</div>' +
+              '<div class="fld">' +
+                '<label for="qa_category" class="fld-label mono">Category <span class="req">*</span></label>' +
+                '<select id="qa_category" required class="fld-input custom-select">' +
+                  '<option value="die-casting">Die Casting &amp; Foundry</option>' +
+                  '<option value="precision-machining">Precision Machining &amp; CNC</option>' +
+                  '<option value="tooling-molds">Tooling, Dies &amp; Molds</option>' +
+                  '<option value="pumps-motors">Pumps, Motors &amp; Drives</option>' +
+                  '<option value="sheet-metal">Sheet Metal &amp; Fabrication</option>' +
+                  '<option value="switchgear">Switchgear &amp; Panels</option>' +
+                  '<option value="transformers">Transformers</option>' +
+                  '<option value="automation">Industrial Automation &amp; Controls</option>' +
+                  '<option value="cables">Cables &amp; Accessories</option>' +
+                  '<option value="solar">Solar Energy Systems</option>' +
+                  '<option value="other">Other</option>' +
+                '</select>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="fld-grid">' +
+              '<div class="fld">' +
+                '<label for="qa_city" class="fld-label mono">City</label>' +
+                '<input id="qa_city" class="fld-input" value="Coimbatore" />' +
+              '</div>' +
+              '<div class="fld">' +
+                '<label for="qa_state" class="fld-label mono">State</label>' +
+                '<input id="qa_state" class="fld-input" value="Tamil Nadu" />' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="fld">' +
+              '<label for="qa_desc" class="fld-label mono">Capabilities, Machine Tonnage &amp; Alloys <span class="req">*</span></label>' +
+              '<textarea id="qa_desc" required class="fld-input fld-textarea" rows="3" placeholder="e.g. 800T HPDC and 400T LPDC aluminum die casting manufacturer specializing in automotive brackets, motor housings, and heat sinks with ADC12 and Zamak 3 alloys. In-house 4-axis VMC machining and CMM inspection."></textarea>' +
+            '</div>' +
+
+            '<div class="fld-grid">' +
+              '<div class="fld">' +
+                '<label for="qa_whatsapp" class="fld-label mono">WhatsApp Number (Direct)</label>' +
+                '<input id="qa_whatsapp" class="fld-input" placeholder="e.g. 919876543210" />' +
+                '<div class="fld-hint mono">Include country code (e.g. 91...) for 1-tap WhatsApp followup.</div>' +
+              '</div>' +
+              '<div class="fld">' +
+                '<label for="qa_website" class="fld-label mono">Website / Catalog URL</label>' +
+                '<input id="qa_website" class="fld-input" placeholder="e.g. https://apexcasting.in" />' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="fld-grid">' +
+              '<div class="fld">' +
+                '<label for="qa_status" class="fld-label mono">Verification Status</label>' +
+                '<select id="qa_status" class="fld-input custom-select">' +
+                  '<option value="verified" selected>Verified (In-person booth verified)</option>' +
+                  '<option value="founding">Founding Member</option>' +
+                  '<option value="draft">Draft Profile</option>' +
+                '</select>' +
+              '</div>' +
+              '<div class="fld">' +
+                '<label for="qa_sourcenote" class="fld-label mono">Source / Event Note</label>' +
+                '<input id="qa_sourcenote" class="fld-input" value="CODISSIA Inter Die Casting Expo 2026" />' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="fld">' +
+              '<label class="fld-label mono">Certifications &amp; Standards (Quick Select)</label>' +
+              '<div class="cert-checkbox-grid">' +
+                '<label class="chk-item"><input type="checkbox" name="qa_cert" value="IATF 16949" checked /> <span>IATF 16949 (Automotive)</span></label>' +
+                '<label class="chk-item"><input type="checkbox" name="qa_cert" value="ISO 9001:2015" checked /> <span>ISO 9001:2015</span></label>' +
+                '<label class="chk-item"><input type="checkbox" name="qa_cert" value="ISO 14001" /> <span>ISO 14001 (Environmental)</span></label>' +
+                '<label class="chk-item"><input type="checkbox" name="qa_cert" value="AS 9100" /> <span>AS 9100 (Aerospace)</span></label>' +
+                '<label class="chk-item"><input type="checkbox" name="qa_cert" value="CE Marked" /> <span>CE Marked</span></label>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="form-actions">' +
+              '<button class="btn btn-primary" type="submit" id="qaSubmitBtn">Create &amp; Index Supplier &rarr;</button>' +
+            '</div>' +
+            '<div id="qaMsg" class="form-msg"></div>' +
+          '</form>' +
+
+          '<!-- Post-Submission Instant Action Panel -->' +
+          '<div id="qaSuccessCard" class="qa-success-card" style="display: none;">' +
+            '<div class="qa-success-header">' +
+              '<span class="badge badge-verified mono" id="qaSuccessBadge">VERIFIED SUPPLIER</span>' +
+              '<span class="mono" id="qaSuccessSpecId" style="font-size: 13px; color: var(--ink-soft);"></span>' +
+            '</div>' +
+            '<h3 id="qaSuccessName" class="qa-success-title"></h3>' +
+            '<p id="qaSuccessUrl" class="mono qa-success-url"></p>' +
+            '<div class="qa-action-buttons">' +
+              '<a id="qaViewProfileBtn" href="#" target="_blank" class="btn btn-dark btn-sm">Open Live Profile &rarr;</a>' +
+              '<a id="qaWaLink" href="#" target="_blank" class="btn wa-btn btn-sm">' +
+                '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.28-1.38c1.45.79 3.08 1.21 4.76 1.21h.01c5.46 0 9.9-4.45 9.9-9.91C21.96 6.45 17.5 2 12.04 2zm0 18.15h-.01c-1.5 0-2.97-.4-4.24-1.16l-.3-.18-3.15.83.84-3.08-.2-.32a8.19 8.19 0 01-1.26-4.4c0-4.53 3.7-8.22 8.24-8.22 2.2 0 4.27.86 5.83 2.42a8.14 8.14 0 012.41 5.81c0 4.54-3.7 8.23-8.24 8.23z"/></svg>' +
+                '<span>Send WhatsApp Follow-up</span>' +
+              '</a>' +
+              '<button type="button" id="qaCopyBadgeBtn" class="btn btn-ghost btn-sm mono">Copy Badge HTML</button>' +
+              '<button type="button" id="qaResetBtn" class="btn btn-ghost btn-sm mono">Add Another Exhibitor +</button>' +
+            '</div>' +
+          '</div>' +
         '</div>';
+
 
       refreshFoundingCount();
       loadAnalytics();
@@ -184,6 +305,141 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
           btn.textContent = "Mark as founding member →";
         }
       });
+
+      // Wire Quick-Add Presets
+      document.querySelectorAll(".preset-btn").forEach(function(btn){
+        btn.addEventListener("click", function(){
+          var p = btn.getAttribute("data-preset");
+          var catSel = document.getElementById("qa_category");
+          var descEl = document.getElementById("qa_desc");
+          var noteEl = document.getElementById("qa_sourcenote");
+
+          // Reset all preset button active styling
+          document.querySelectorAll(".preset-btn").forEach(function(b){
+            b.style.borderColor = "var(--paper-line)";
+            b.style.color = "var(--ink-soft)";
+          });
+          btn.style.borderColor = "var(--green-deep)";
+          btn.style.color = "var(--green-deep)";
+
+          if (p === "die-casting") {
+            if (catSel) catSel.value = "die-casting";
+            if (descEl) descEl.value = "High pressure die casting (HPDC) and gravity die casting (GDC) facility specializing in aluminum and zinc components (ADC12, AlSi9Cu3, Zamak 3/5). Equipped with 400T–1200T machines, in-house CNC machining, and CMM inspection.";
+            if (noteEl) noteEl.value = "CODISSIA Inter Die Casting Expo 2026";
+          } else if (p === "machining") {
+            if (catSel) catSel.value = "precision-machining";
+            if (descEl) descEl.value = "Precision CNC turning and 4-axis / 5-axis VMC machining facility. Specializing in close-tolerance automotive, aerospace, and hydraulic components with surface roughness testing and CMM validation.";
+            if (noteEl) noteEl.value = "CODISSIA Inter Die Casting Expo 2026";
+          } else if (p === "tooling") {
+            if (catSel) catSel.value = "tooling-molds";
+            if (descEl) descEl.value = "High-precision mold and die manufacturing facility designing and producing pressure die casting dies, plastic injection molds, and progressive stamping tools.";
+            if (noteEl) noteEl.value = "CODISSIA Inter Die Casting Expo 2026";
+          } else if (p === "switchgear") {
+            if (catSel) catSel.value = "switchgear";
+            if (descEl) descEl.value = "Manufacturer of LT/HT switchgear panels, motor control centers (MCC), power control centers (PCC), APFC panels, and customized industrial distribution boards.";
+            if (noteEl) noteEl.value = "CODISSIA Industrial Expo Attendee";
+          }
+        });
+      });
+
+      // Wire Quick-Add Form Submission
+      var qaForm = document.getElementById("quickAddForm");
+      if (qaForm) {
+        qaForm.addEventListener("submit", async function(e){
+          e.preventDefault();
+          var btn = document.getElementById("qaSubmitBtn");
+          var msg = document.getElementById("qaMsg");
+          var successCard = document.getElementById("qaSuccessCard");
+          btn.disabled = true;
+          btn.textContent = "Creating & Indexing…";
+          msg.className = "form-msg";
+          successCard.style.display = "none";
+
+          var certs = [];
+          document.querySelectorAll("input[name='qa_cert']:checked").forEach(function(c){
+            certs.push(c.value);
+          });
+
+          var payload = {
+            name: document.getElementById("qa_name").value.trim(),
+            categoryId: document.getElementById("qa_category").value,
+            locationCity: document.getElementById("qa_city").value.trim(),
+            locationState: document.getElementById("qa_state").value.trim(),
+            description: document.getElementById("qa_desc").value.trim(),
+            whatsappNumber: document.getElementById("qa_whatsapp").value.trim() || null,
+            website: document.getElementById("qa_website").value.trim() || null,
+            status: document.getElementById("qa_status").value,
+            sourceNote: document.getElementById("qa_sourcenote").value.trim(),
+            certifications: certs
+          };
+
+          try {
+            var r = await fetch("/api/admin/create-company", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+            var data = await r.json();
+            if (!r.ok) {
+              msg.className = "form-msg err";
+              msg.textContent = data.error || "Could not create company.";
+              btn.disabled = false;
+              btn.textContent = "Create & Index Supplier →";
+              return;
+            }
+
+            msg.className = "form-msg ok";
+            msg.textContent = "Supplier successfully indexed in SpecGrid!";
+            btn.disabled = false;
+            btn.textContent = "Create & Index Supplier →";
+
+            // Populate Success Card
+            document.getElementById("qaSuccessName").textContent = data.name;
+            document.getElementById("qaSuccessSpecId").textContent = data.specId;
+            document.getElementById("qaSuccessUrl").textContent = "specgrid.in" + data.profileUrl;
+            document.getElementById("qaViewProfileBtn").href = data.profileUrl;
+
+            // WhatsApp link
+            var rawWa = payload.whatsappNumber ? payload.whatsappNumber.replace(/[^0-9]/g, "") : "";
+            var waGreeting = "Hi " + payload.name + " team, great connecting at the Inter Die Casting Expo at CODISSIA today! We have published your verified engineering profile on SpecGrid: https://specgrid.in" + data.profileUrl + " — let me know if you'd like to update any machine specs, casting tonnage, or certifications!";
+            var waLinkEl = document.getElementById("qaWaLink");
+            if (rawWa) {
+              waLinkEl.href = "https://wa.me/" + rawWa + "?text=" + encodeURIComponent(waGreeting);
+              waLinkEl.style.display = "inline-flex";
+            } else {
+              waLinkEl.style.display = "none";
+            }
+
+            // Copy Badge Snippet
+            var copyBadgeBtn = document.getElementById("qaCopyBadgeBtn");
+            copyBadgeBtn.onclick = function(){
+              var snippet = '<a href="https://specgrid.in' + data.profileUrl + '" target="_blank" rel="noopener"><img src="https://specgrid.in/badge/' + data.slug + '.svg" alt="' + esc(data.name) + ' SpecGrid Verified" width="320" height="64" /></a>';
+              navigator.clipboard.writeText(snippet);
+              copyBadgeBtn.textContent = "Copied!";
+              setTimeout(function(){ copyBadgeBtn.textContent = "Copy Badge HTML"; }, 2000);
+            };
+
+            // Reset Button
+            document.getElementById("qaResetBtn").onclick = function(){
+              qaForm.reset();
+              successCard.style.display = "none";
+              msg.className = "form-msg";
+              document.getElementById("qa_city").value = "Coimbatore";
+              document.getElementById("qa_state").value = "Tamil Nadu";
+              document.getElementById("qa_sourcenote").value = "CODISSIA Inter Die Casting Expo 2026";
+            };
+
+            successCard.style.display = "block";
+            successCard.scrollIntoView({ behavior: "smooth" });
+          } catch(err) {
+            msg.className = "form-msg err";
+            msg.textContent = "Network error — please check connection and try again.";
+            btn.disabled = false;
+            btn.textContent = "Create & Index Supplier →";
+          }
+        });
+      }
+
 
       // Load Claims
       var claimsRes = await authedFetch("/api/admin/claims?status=pending");
@@ -751,9 +1007,109 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
     text-decoration: underline;
   }
 
+  :global(.fld-textarea) {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  :global(.preset-group) {
+    margin: 14px 0 6px;
+    padding: 12px 14px;
+    background: rgba(0, 0, 0, 0.02);
+    border: 1px dashed var(--paper-line);
+    border-radius: var(--radius);
+  }
+
+  :global(.preset-buttons) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  :global(.preset-btn) {
+    border: 1px solid var(--paper-line);
+    background: #fff;
+    color: var(--ink-soft);
+    font-size: 11.5px;
+    padding: 6px 12px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  :global(.preset-btn:hover) {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  :global(.cert-checkbox-grid) {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px 12px;
+    margin-top: 6px;
+  }
+
+  :global(.qa-success-card) {
+    margin-top: 24px;
+    padding: 20px;
+    background: #fff;
+    border: 1.5px solid var(--green);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 16px rgba(47, 125, 79, 0.08);
+  }
+
+  :global(.qa-success-header) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  :global(.qa-success-title) {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: var(--ink);
+  }
+
+  :global(.qa-success-url) {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 16px;
+  }
+
+  :global(.qa-action-buttons) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  :global(.wa-btn) {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #25D366;
+    color: #fff !important;
+    border: none;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: var(--radius);
+  }
+
+  :global(.wa-btn:hover) {
+    background: #20ba5a;
+  }
+
   @media (max-width: 600px) {
     :global(.fld-grid) {
       grid-template-columns: 1fr;
     }
+    :global(.qa-action-buttons) {
+      flex-direction: column;
+      align-items: stretch;
+    }
   }
 </style>
+

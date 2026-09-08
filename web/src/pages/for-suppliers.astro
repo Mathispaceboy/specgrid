@@ -4,7 +4,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 const faqs = [
   {
     q: "What if I'm already on IndiaMART?",
-    a: "SpecGrid isn't a replacement for IndiaMART — it's a different kind of listing. Buyers here search by exact technical spec (voltage class, IP rating, certification), not by ad spend, and your enquiry goes straight to you without being resold to competitors."
+    a: "SpecGrid isn't a replacement for IndiaMART — it's a different kind of listing. Buyers here search by exact technical spec (machine tonnage, alloy grade, process, voltage class, certification), not by ad spend, and your enquiry goes straight to you without being resold to competitors."
   },
   {
     q: "Why pay if I'm already listed free?",
@@ -52,7 +52,7 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
       <div class="wrap">
         <div class="titleblock" style="margin-bottom: 28px;">
           <div>Program<strong>Founding Manufacturer Index</strong></div>
-          <div>Location<strong>Coimbatore &amp; South India Cluster</strong></div>
+          <div>Location<strong>Coimbatore &amp; National Industrial Corridors</strong></div>
           <div>Listing<strong>Direct &middot; No Lead Reselling</strong></div>
           <div>Model<strong>Verified Technical Specifications</strong></div>
         </div>
@@ -64,7 +64,7 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
 
         <h1 class="supp-title">Your specs are invisible to the buyers who matter.</h1>
         <p class="supp-lead">
-          Buyers searching for &ldquo;36kV VCB, IEC type-tested, Coimbatore&rdquo; don't find you on generic directories built for ad spend, not accuracy. SpecGrid indexes what you actually make.
+          Buyers searching for &ldquo;800T HPDC ADC12 Coimbatore&rdquo; or &ldquo;36kV VCB IEC type-tested&rdquo; don't find you on generic directories built for ad spend, not accuracy. SpecGrid indexes what you actually make.
         </p>
 
         <div class="supp-cta-group">
@@ -111,7 +111,7 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
             <div class="pain-num mono">03</div>
             <h3>No spec filtering</h3>
             <p>
-              Buyers can't filter by voltage class, IP rating, or certification — so you're competing on listing position and ad spend, not on what you can actually build.
+              Buyers can't filter by machine tonnage, alloy grades, casting processes, or certifications — so you're competing on listing position and ad spend, not on what you can actually build.
             </p>
           </div>
         </div>
@@ -180,10 +180,10 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
             </div>
             <div class="mockup-body">
               <div class="mockup-prompt mono">
-                &ldquo;who makes 36kV vacuum circuit breakers in Coimbatore with ISO certification&rdquo;
+                &ldquo;who does 800T high pressure die casting in Coimbatore with IATF 16949 certification&rdquo;
               </div>
               <div class="mockup-response">
-                Based on available directories, manufacturers include companies specializing in AIS and VCB panel systems tested to IEC standards in the Coimbatore–Salem industrial cluster...
+                Based on verified technical directories, manufacturers include Coimbatore-based foundries specializing in HPDC and LPDC aluminum alloys (ADC12, A380) with in-house CNC machining and IATF 16949 automotive certification...
                 <div class="citation-tag mono">cited: specgrid.in</div>
               </div>
             </div>
@@ -191,6 +191,7 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
         </div>
       </div>
     </section>
+
 
     <!-- Buyer Intent Intelligence Section -->
     <section class="supp-sec">

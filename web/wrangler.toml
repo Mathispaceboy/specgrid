@@ -18,3 +18,9 @@ binding = "ASSETS"
 # [[services]]
 # binding = "API"
 # service = "specgrid-api"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "specgrid-db"
+database_id = "d91ecc07-a703-4b4b-bd18-1942b288c27b"
+

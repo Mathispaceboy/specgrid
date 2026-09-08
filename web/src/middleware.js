@@ -37,6 +37,8 @@ function isMigrated(pathname) {
   if (p.startsWith('/account/edit/')) return true;
   // P9C: Embeddable Badges
   if (p.startsWith('/badge/')) return true;
+  // API Routes (e.g. /api/admin/create-company)
+  if (p.startsWith('/api/')) return true;
   return false;
 }
 
