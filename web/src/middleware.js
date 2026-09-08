@@ -4,7 +4,6 @@ import legacyWorker from './legacy/legacyWorker.js';
 // In Phase 1, only the design test / preview route is in Astro.
 // Future phases will add: '/about', '/terms', '/privacy', '/data-disclaimer', '/for-suppliers', '/', etc.
 export const MIGRATED_ROUTES = new Set([
-  '/design-system',
   // Phase 2: Static Editorial & Legal Pages
   '/about',
   '/terms',
