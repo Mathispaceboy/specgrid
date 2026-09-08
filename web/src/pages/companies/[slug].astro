@@ -4,8 +4,8 @@ import { trackServer } from '../../utils/tracking.js';
 
 const { slug } = Astro.params;
 
-if (!slug) {
-  return new Response("Not found", { status: 404 });
+if (!slug || slug === "index" || slug === "companies") {
+  return Astro.redirect(`/search${Astro.url.search}`, 301);
 }
 
 const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
@@ -25,13 +25,15 @@ try {
     // Server-side tracking for profile view
     trackServer(Astro.request, "company_view", slug, null, Astro.locals);
 
-    // Fetch similar suppliers in the same category
-    if (co.category) {
+    // Use smart similar suppliers returned by API
+    if (co.similar && co.similar.length > 0) {
+      similar = co.similar;
+    } else if (co.category) {
       try {
         const simRes = await fetch(`${API_BASE}/api/companies?category=${encodeURIComponent(co.category)}&limit=6`);
         if (simRes.ok) {
           const simData = await simRes.json();
-          similar = (simData.results || []).filter((c: any) => c.slug !== slug).slice(0, 3);
+          similar = (simData.results || []).filter((c: any) => c.slug !== slug).slice(0, 4);
         }
       } catch (e) {}
     }
@@ -322,27 +324,73 @@ const orgJsonLd = co ? {
 
         <!-- Similar Suppliers Recommendation -->
         {similar.length > 0 && (
-          <section class="profile-section">
-            <div class="section-label mono">05 // Peer Cluster</div>
-            <h2>Similar suppliers</h2>
+          <section class="profile-section peer-cluster-section">
+            <div class="section-label mono">05 // Regional Peer Cluster & Capability Comparison</div>
+            <div class="peer-header-row">
+              <div>
+                <h2>Similar Industrial Manufacturers</h2>
+                <p class="peer-lead">
+                  Verified suppliers in the same regional industrial cluster with comparable tooling, machinery, or technical capabilities.
+                </p>
+              </div>
+              {co.category && (
+                <a href={`/search?category=${encodeURIComponent(co.category)}`} class="btn btn-secondary mono peer-all-btn">
+                  <span>Browse All {co.category.replace(/-/g, " ")}</span> &rarr;
+                </a>
+              )}
+            </div>
+
             <div class="similar-grid">
               {similar.map((s: any) => {
                 const sLoc = [s.location && s.location.city, s.location && s.location.state].filter(Boolean).join(", ");
                 const sBadge = s.status === "founding" ? "Founding member" : (s.status === "claimed" ? "Verified" : "Draft profile");
                 const sBadgeCls = s.status === "founding" ? "badge-founding" : (s.status === "claimed" ? "badge-verified" : "badge-draft");
+                const sDesc = s.description ? s.description.slice(0, 130) + (s.description.length > 130 ? "…" : "") : "";
 
                 return (
                   <a href={`/companies/${s.slug}`} class="similar-card">
                     <div class="similar-top">
-                      <div>
-                        <div class="similar-name">{s.name}</div>
+                      <div class="similar-title-block">
+                        <h3 class="similar-name">{s.name}</h3>
                         <div class="similar-loc mono">{sLoc}</div>
                       </div>
                       <span class={`badge ${sBadgeCls}`}>{sBadge}</span>
                     </div>
+
+                    {sDesc && (
+                      <p class="similar-desc">{sDesc}</p>
+                    )}
+
+                    {s.products && s.products.length > 0 && (
+                      <div class="similar-products-strip">
+                        {s.products.slice(0, 2).map((p: any) => {
+                          let pName = (p.name || "").replace(/^(Product Range|Flagship Product|Flagship Technology|Die Casting Tooling|Injection Molds|Distribution Transformers|Products|Services|Capabilities):\s*/i, "");
+                          if (pName.length > 38) pName = pName.slice(0, 36) + "…";
+                          return <span class="similar-prod-chip mono">{pName}</span>;
+                        })}
+                      </div>
+                    )}
+
+                    <div class="similar-foot mono">
+                      <span>Compare Specifications & Tooling</span>
+                      <span class="similar-arrow">&rarr;</span>
+                    </div>
                   </a>
                 );
               })}
+            </div>
+
+            <div class="peer-footer-callout">
+              <div class="pfc-content">
+                <span class="pfc-tag mono">DIRECT INDUSTRIAL TAXONOMY</span>
+                <h4>Need alternate sourcing options or custom BOM quotes?</h4>
+                <p>Compare machine tonnages, certifications, and technical datasheets across India's manufacturing hubs without middleman brokers.</p>
+              </div>
+              <div class="pfc-action">
+                <a href={co.category ? `/search?category=${encodeURIComponent(co.category)}` : "/search"} class="btn btn-primary">
+                  <span>Explore Full Directory</span> &rarr;
+                </a>
+              </div>
             </div>
           </section>
         )}
@@ -732,43 +780,148 @@ const orgJsonLd = co ? {
 
   /* Similar Suppliers */
   .similar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .peer-header-row {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 10px;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  .peer-lead {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin: 4px 0 0;
+    max-width: 600px;
+  }
+
+  .peer-all-btn {
+    font-size: 12px;
+    padding: 7px 12px;
+    text-transform: capitalize;
   }
 
   .similar-card {
     border: 1px solid var(--paper-line);
-    background: var(--paper);
+    background: var(--card);
     border-radius: var(--radius);
-    padding: 14px 16px;
+    padding: 18px 20px;
     text-decoration: none;
     color: inherit;
-    transition: border-color 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: all 0.15s ease;
   }
 
   .similar-card:hover {
     border-color: var(--ink);
+    box-shadow: 0 4px 12px rgba(20, 36, 46, 0.05);
+    transform: translateY(-2px);
   }
 
   .similar-top {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     gap: 12px;
   }
 
   .similar-name {
     font-weight: 700;
-    font-size: 14px;
+    font-size: 15px;
     color: var(--ink);
+    line-height: 1.3;
+    margin: 0;
   }
 
   .similar-loc {
-    font-size: 12px;
+    font-size: 11.5px;
     color: var(--ink-soft);
+    margin-top: 3px;
+  }
+
+  .similar-desc {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .similar-products-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
     margin-top: 2px;
+  }
+
+  .similar-prod-chip {
+    font-size: 10.5px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    background: rgba(20, 36, 46, 0.04);
+    border: 1px solid var(--paper-line);
+    color: var(--ink);
+  }
+
+  .similar-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--green-deep);
+    font-weight: 600;
+    border-top: 1px dashed var(--paper-line);
+    padding-top: 10px;
+    margin-top: auto;
+  }
+
+  .similar-arrow {
+    transition: transform 0.15s ease;
+  }
+
+  .similar-card:hover .similar-arrow {
+    transform: translateX(3px);
+  }
+
+  .peer-footer-callout {
+    margin-top: 24px;
+    padding: 20px 24px;
+    background: var(--paper);
+    border: 1px dashed var(--paper-line);
+    border-radius: var(--radius);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .pfc-tag {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--green-deep);
+    font-weight: 700;
+  }
+
+  .peer-footer-callout h4 {
+    margin: 4px 0 2px;
+    font-size: 15px;
+    color: var(--ink);
+  }
+
+  .peer-footer-callout p {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    max-width: 620px;
   }
 
   .notfound-wrap {

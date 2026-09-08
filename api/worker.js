@@ -114,8 +114,11 @@ async function handleListCompanies(url, env) {
   const state = params.get("state");
   const q = params.get("q");
   const hasCertification = params.get("has_certification");
+  const sort = params.get("sort") || "verified";
   const limit = Math.min(parseInt(params.get("limit") || "24", 10), 100);
-  const offset = Math.max(parseInt(params.get("offset") || "0", 10), 0);
+  const page = Math.max(parseInt(params.get("page") || "1", 10), 1);
+  const offset = params.get("offset") !== null ? Math.max(parseInt(params.get("offset"), 10), 0) : (page - 1) * limit;
+
   let where = ["public_visible = 1"];
   let binds = [];
   if (category) { where.push("category_id = ?"); binds.push(category); }
@@ -133,9 +136,19 @@ async function handleListCompanies(url, env) {
   if (hasCertification === "true") {
     where.push("EXISTS (SELECT 1 FROM certifications WHERE certifications.company_id = companies.id)");
   }
+
+  let orderSql = "ORDER BY CASE WHEN status = 'founding' THEN 1 WHEN status = 'claimed' THEN 2 ELSE 3 END, name ASC";
+  if (sort === "name_asc") {
+    orderSql = "ORDER BY name ASC";
+  } else if (sort === "name_desc") {
+    orderSql = "ORDER BY name DESC";
+  } else if (sort === "newest") {
+    orderSql = "ORDER BY created_at DESC";
+  }
+
   const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
   const countStmt = env.DB.prepare(`SELECT COUNT(*) as c FROM companies ${whereSql}`).bind(...binds);
-  const listStmt = env.DB.prepare(`SELECT ${PUBLIC_COMPANY_FIELDS} FROM companies ${whereSql} ORDER BY name ASC LIMIT ? OFFSET ?`).bind(...binds, limit, offset);
+  const listStmt = env.DB.prepare(`SELECT ${PUBLIC_COMPANY_FIELDS} FROM companies ${whereSql} ${orderSql} LIMIT ? OFFSET ?`).bind(...binds, limit, offset);
   const [countRes, listRes] = await Promise.all([countStmt.all(), listStmt.all()]);
   const companies = (listRes.results || []).map(serializePublicCompany);
 
@@ -161,7 +174,15 @@ async function handleListCompanies(url, env) {
     }
   }
 
-  return json({ total: countRes.results?.[0]?.c ?? 0, limit, offset, results: companies });
+  const total = countRes.results?.[0]?.c ?? 0;
+  return json({
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+    limit,
+    offset,
+    results: companies
+  });
 }
 
 const COMPANY_TYPES = ["manufacturer", "trader_distributor", "service_provider", "epc_contractor", "other"];
@@ -194,6 +215,55 @@ async function handleGetCompany(slug, env) {
       specs: parsedSpecs,
     };
   });
+
+  // Fetch intelligent similar peers
+  try {
+    let simQuery = "";
+    let simBinds = [];
+    if (company.category) {
+      simQuery = `SELECT ${PUBLIC_COMPANY_FIELDS} FROM companies WHERE category_id = ? AND id != ? AND public_visible = 1 ORDER BY CASE WHEN status = 'founding' THEN 1 WHEN status = 'claimed' THEN 2 ELSE 3 END, CASE WHEN location_state = ? THEN 1 ELSE 2 END, name ASC LIMIT 4`;
+      simBinds = [company.category, company.id, company.location?.state || "Tamil Nadu"];
+    } else {
+      simQuery = `SELECT ${PUBLIC_COMPANY_FIELDS} FROM companies WHERE id != ? AND public_visible = 1 ORDER BY CASE WHEN status = 'founding' THEN 1 WHEN status = 'claimed' THEN 2 ELSE 3 END, CASE WHEN location_state = ? THEN 1 ELSE 2 END, name ASC LIMIT 4`;
+      simBinds = [company.id, company.location?.state || "Tamil Nadu"];
+    }
+
+    let simRes = await env.DB.prepare(simQuery).bind(...simBinds).all();
+    let similarCompanies = (simRes.results || []).map(serializePublicCompany);
+
+    if (similarCompanies.length < 3) {
+      const existingIds = [company.id, ...similarCompanies.map(s => s.id)];
+      const exPlaceholders = existingIds.map(() => "?").join(",");
+      const backfillRes = await env.DB.prepare(
+        `SELECT ${PUBLIC_COMPANY_FIELDS} FROM companies WHERE id NOT IN (${exPlaceholders}) AND public_visible = 1 ORDER BY CASE WHEN location_state = ? THEN 1 ELSE 2 END, CASE WHEN company_type = 'manufacturer' THEN 1 ELSE 2 END, name ASC LIMIT ?`
+      ).bind(...existingIds, company.location?.state || "Tamil Nadu", 4 - similarCompanies.length).all();
+      similarCompanies = [...similarCompanies, ...(backfillRes.results || []).map(serializePublicCompany)];
+    }
+
+    if (similarCompanies.length > 0) {
+      const simIds = similarCompanies.map(s => s.id);
+      const simPlaceholders = simIds.map(() => "?").join(",");
+      const simProdsRes = await env.DB.prepare(
+        `SELECT company_id, name, specs FROM products WHERE company_id IN (${simPlaceholders}) ORDER BY created_at ASC`
+      ).bind(...simIds).all();
+      const simProdsMap = {};
+      for (const p of (simProdsRes.results || [])) {
+        if (!simProdsMap[p.company_id]) simProdsMap[p.company_id] = [];
+        let parsedSpecs = null;
+        if (p.specs) {
+          try { parsedSpecs = JSON.parse(p.specs); } catch (e) { parsedSpecs = null; }
+        }
+        simProdsMap[p.company_id].push({ name: p.name, specs: parsedSpecs });
+      }
+      for (const s of similarCompanies) {
+        s.products = simProdsMap[s.id] || [];
+      }
+    }
+    company.similar = similarCompanies;
+  } catch (e) {
+    company.similar = [];
+  }
+
   return json(company);
 }
 

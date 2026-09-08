@@ -6,4 +6,7 @@ export default defineConfig({
   adapter: cloudflare({
     imageService: 'passthrough',
   }),
+  redirects: {
+    '/companies': '/search',
+  },
 });

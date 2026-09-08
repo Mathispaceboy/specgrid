@@ -118,9 +118,21 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
 
       <!-- Results Column -->
       <main class="results-col">
-        <!-- Results Header Metadata -->
+        <!-- Active Filter Pills Bar -->
+        <div id="activeFiltersBar" class="active-filters-bar" style="display: none;"></div>
+
+        <!-- Results Header Metadata & Sort Selector -->
         <div class="results-header">
           <div id="resultMeta" class="results-meta mono">Loading results&hellip;</div>
+          <div class="sort-wrap">
+            <label for="sortSelect" class="sort-label mono">Sort:</label>
+            <select id="sortSelect" class="sort-select custom-select mono">
+              <option value="verified">Verified First</option>
+              <option value="name_asc">Name (A–Z)</option>
+              <option value="name_desc">Name (Z–A)</option>
+              <option value="newest">Recently Added</option>
+            </select>
+          </div>
         </div>
 
         <!-- Results List -->
@@ -130,13 +142,16 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
           <div class="result-card skel" style="height: 100px;"></div>
           <div class="result-card skel" style="height: 100px;"></div>
         </div>
+
+        <!-- Pagination Controls -->
+        <nav id="paginationNav" class="pagination-nav" aria-label="Directory Pagination" style="display: none;"></nav>
       </main>
     </div>
   </div>
 </BaseLayout>
 
 <script is:inline define:vars={{ API_BASE }}>
-  // Interactive search directory script matching legacyWorker data flow
+  // Interactive search directory script with pagination, sorting, and active filter management
   (async () => {
     const b = API_BASE;
     const params = new URLSearchParams(window.location.search);
@@ -145,12 +160,17 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
     const state = params.get("state") || "";
     const companyType = params.get("company_type") || "";
     const hasCert = params.get("has_certification") === "true";
+    const sort = params.get("sort") || "verified";
+    const page = Math.max(parseInt(params.get("page") || "1", 10), 1);
 
     const searchInput = document.getElementById("searchInput");
     if (searchInput) searchInput.value = q;
 
     const certFilter = document.getElementById("certFilter");
     if (certFilter) certFilter.checked = hasCert;
+
+    const sortSelect = document.getElementById("sortSelect");
+    if (sortSelect) sortSelect.value = sort;
 
     const typeLabels = {
       manufacturer: "Manufacturer",
@@ -160,7 +180,9 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
       other: "Other"
     };
 
-    function currentParams() {
+    let categoriesMap = {};
+
+    function currentParams(newPage = 1, newSort = null) {
       const p = new URLSearchParams();
       if (q) p.set("q", q);
       if (category) p.set("category", category);
@@ -171,12 +193,32 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
       if (document.getElementById("certFilter") && document.getElementById("certFilter").checked) {
         p.set("has_certification", "true");
       }
+      const srt = newSort !== null ? newSort : (document.getElementById("sortSelect") ? document.getElementById("sortSelect").value : sort);
+      if (srt && srt !== "verified") {
+        p.set("sort", srt);
+      }
+      if (newPage > 1) {
+        p.set("page", String(newPage));
+      }
       return p;
     }
 
     function applyFilters() {
-      window.location.href = "/search?" + currentParams().toString();
+      window.location.href = "/search?" + currentParams(1).toString();
     }
+
+    if (sortSelect) {
+      sortSelect.addEventListener("change", function() {
+        window.location.href = "/search?" + currentParams(1, this.value).toString();
+      });
+    }
+
+    window.removeFilter = function(filterKey) {
+      const p = new URLSearchParams(window.location.search);
+      p.delete(filterKey);
+      p.delete("page");
+      window.location.href = "/search?" + p.toString();
+    };
 
     // 1. Populate Dropdown Filter Options
     try {
@@ -219,7 +261,7 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
         
         // "All categories" link
         const all = document.createElement("a");
-        const ap = currentParams();
+        const ap = currentParams(1);
         ap.delete("category");
         all.href = "/search" + (ap.toString() ? "?" + ap.toString() : "");
         all.className = "cat-chip" + (!category ? " active" : "");
@@ -228,8 +270,9 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
 
         // Each specific category link
         (cats.results || []).forEach(c => {
+          categoriesMap[c.slug] = c.name;
           const a = document.createElement("a");
-          const p = currentParams();
+          const p = currentParams(1);
           p.set("category", c.slug);
           a.href = "/search?" + p.toString();
           a.className = "cat-chip" + (category === c.slug ? " active" : "");
@@ -242,7 +285,40 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
       if (cf) cf.innerHTML = '<div style="color:var(--ink-soft);font-size:12px;">Categories unavailable</div>';
     }
 
-    // 3. Populate Search Results
+    // 3. Render Active Filter Badges Bar
+    const activeFiltersBar = document.getElementById("activeFiltersBar");
+    if (activeFiltersBar) {
+      const pills = [];
+      if (q) {
+        pills.push('<span class="active-pill mono">Search: "' + q.replace(/</g, "&lt;") + '" <button type="button" onclick="removeFilter(\'q\')" aria-label="Remove search filter">&times;</button></span>');
+      }
+      if (category) {
+        const catLabel = categoriesMap[category] || category.replace(/-/g, " ");
+        pills.push('<span class="active-pill mono">Category: ' + catLabel.replace(/</g, "&lt;") + ' <button type="button" onclick="removeFilter(\'category\')" aria-label="Remove category filter">&times;</button></span>');
+      }
+      if (companyType) {
+        const typeLabel = typeLabels[companyType] || companyType;
+        pills.push('<span class="active-pill mono">Type: ' + typeLabel.replace(/</g, "&lt;") + ' <button type="button" onclick="removeFilter(\'company_type\')" aria-label="Remove company type filter">&times;</button></span>');
+      }
+      if (state) {
+        pills.push('<span class="active-pill mono">State: ' + state.replace(/</g, "&lt;") + ' <button type="button" onclick="removeFilter(\'state\')" aria-label="Remove state filter">&times;</button></span>');
+      }
+      if (hasCert) {
+        pills.push('<span class="active-pill mono">Has Certification <button type="button" onclick="removeFilter(\'has_certification\')" aria-label="Remove certification filter">&times;</button></span>');
+      }
+
+      if (pills.length > 0) {
+        activeFiltersBar.style.display = "flex";
+        activeFiltersBar.innerHTML =
+          '<span class="active-label mono">Active filters:</span>' +
+          pills.join("") +
+          '<a href="/search" class="clear-all-link mono">Clear all filters</a>';
+      } else {
+        activeFiltersBar.style.display = "none";
+      }
+    }
+
+    // 4. Populate Search Results with Pagination
     try {
       const p = new URLSearchParams();
       if (q) p.set("q", q);
@@ -250,21 +326,22 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
       if (state) p.set("state", state);
       if (companyType) p.set("company_type", companyType);
       if (hasCert) p.set("has_certification", "true");
+      if (sort && sort !== "verified") p.set("sort", sort);
+      p.set("page", String(page));
       p.set("limit", "24");
 
       const data = await fetch(b + "/api/companies?" + p.toString()).then(r => r.json());
       const results = data.results || [];
-      const filterBits = [];
-      if (companyType) filterBits.push(typeLabels[companyType] || companyType);
-      if (state) filterBits.push(state);
-      if (hasCert) filterBits.push("certified");
+      const total = data.total || 0;
+      const totalPages = data.totalPages || Math.ceil(total / 24) || 1;
+      const startIdx = total > 0 ? (data.offset || 0) + 1 : 0;
+      const endIdx = (data.offset || 0) + results.length;
 
       const metaEl = document.getElementById("resultMeta");
       if (metaEl) {
-        metaEl.textContent =
-          data.total + " result" + (data.total === 1 ? "" : "s") +
-          (q ? ' for "' + q + '"' : "") +
-          (filterBits.length ? " · " + filterBits.join(" · ") : "");
+        metaEl.innerHTML =
+          'Showing <strong>' + startIdx + '&ndash;' + endIdx + '</strong> of <strong>' + total + '</strong> manufacturers' +
+          (totalPages > 1 ? ' <span style="color:var(--ink-soft);font-weight:normal;">(Page ' + page + ' of ' + totalPages + ')</span>' : '');
       }
 
       const listEl = document.getElementById("resultList");
@@ -274,9 +351,14 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
           listEl.innerHTML = `
             <div class="empty-state">
               <div class="empty-title mono">NO SPECIFICATION MATCHES FOUND</div>
-              <p>No matches yet — try a broader search query, remove a filter, or browse by another category.</p>
+              <p>No matches yet — try a broader search query, remove an active filter, or explore by another category.</p>
+              <div style="margin-top: 16px;">
+                <a href="/search" class="btn btn-secondary mono" style="font-size: 12px;">Reset Directory Filters</a>
+              </div>
             </div>
           `;
+          const pagNav = document.getElementById("paginationNav");
+          if (pagNav) pagNav.style.display = "none";
           return;
         }
 
@@ -340,6 +422,75 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
 
           listEl.appendChild(card);
         });
+
+        // 5. Render Pagination Navigation Controls
+        const pagNav = document.getElementById("paginationNav");
+        if (pagNav) {
+          if (totalPages <= 1) {
+            pagNav.style.display = "none";
+            pagNav.innerHTML = "";
+          } else {
+            pagNav.style.display = "flex";
+            let pagHtml = "";
+
+            // Previous Button
+            if (page > 1) {
+              const prevParams = currentParams(page - 1);
+              pagHtml += '<a href="/search?' + prevParams.toString() + '" class="pag-btn mono">&larr; Previous</a>';
+            } else {
+              pagHtml += '<span class="pag-btn disabled mono">&larr; Previous</span>';
+            }
+
+            // Page numbers with windowed delta
+            pagHtml += '<div class="pag-numbers mono">';
+            const delta = 2;
+            const left = page - delta;
+            const right = page + delta + 1;
+            const range = [];
+            const rangeWithDots = [];
+
+            for (let i = 1; i <= totalPages; i++) {
+              if (i === 1 || i === totalPages || (i >= left && i < right)) {
+                range.push(i);
+              }
+            }
+
+            let last;
+            for (const i of range) {
+              if (last) {
+                if (i - last === 2) {
+                  rangeWithDots.push(last + 1);
+                } else if (i - last !== 1) {
+                  rangeWithDots.push("...");
+                }
+              }
+              rangeWithDots.push(i);
+              last = i;
+            }
+
+            for (const item of rangeWithDots) {
+              if (item === "...") {
+                pagHtml += '<span class="pag-ellipsis">&hellip;</span>';
+              } else if (item === page) {
+                pagHtml += '<span class="pag-num active">' + item + '</span>';
+              } else {
+                const itemParams = currentParams(item);
+                pagHtml += '<a href="/search?' + itemParams.toString() + '" class="pag-num">' + item + '</a>';
+              }
+            }
+            pagHtml += '</div>';
+
+            // Next Button
+            if (page < totalPages) {
+              const nextParams = currentParams(page + 1);
+              pagHtml += '<a href="/search?' + nextParams.toString() + '" class="pag-btn mono">Next &rarr;</a>';
+            } else {
+              pagHtml += '<span class="pag-btn disabled mono">Next &rarr;</span>';
+            }
+
+            pagNav.innerHTML = pagHtml;
+          }
+        }
       }
     } catch(e) {
       const metaEl = document.getElementById("resultMeta");
@@ -579,14 +730,169 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
     gap: 16px;
   }
 
+  .active-filters-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--card);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+  }
+
+  .active-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  :global(.active-pill) {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    padding: 3px 8px;
+    background: var(--green-soft);
+    color: var(--green-deep);
+    border-radius: 3px;
+    border: 1px solid rgba(31, 111, 74, 0.25);
+    font-weight: 600;
+  }
+
+  :global(.active-pill button) {
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    font-weight: 700;
+  }
+
+  :global(.clear-all-link) {
+    font-size: 11px;
+    color: #A33A3A;
+    text-decoration: underline;
+    margin-left: auto;
+    font-weight: 600;
+  }
+
   .results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
     border-bottom: 1px solid var(--paper-line);
     padding-bottom: 12px;
   }
 
   .results-meta {
-    font-size: 12.5px;
+    font-size: 13px;
+    color: var(--ink);
+  }
+
+  .sort-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sort-label {
+    font-size: 11.5px;
+    font-weight: 600;
     color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .sort-select {
+    width: auto;
+    padding: 6px 10px;
+    font-size: 12px;
+    background: var(--card);
+  }
+
+  /* Pagination Navigation */
+  .pagination-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--paper-line);
+    flex-wrap: wrap;
+  }
+
+  :global(.pag-btn) {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    background: var(--card);
+    color: var(--ink);
+    font-size: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.15s ease;
+  }
+
+  :global(.pag-btn:hover:not(.disabled)) {
+    border-color: var(--ink);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(20, 36, 46, 0.05);
+  }
+
+  :global(.pag-btn.disabled) {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: var(--paper);
+  }
+
+  :global(.pag-numbers) {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  :global(.pag-num) {
+    min-width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    background: var(--card);
+    color: var(--ink);
+    font-size: 12.5px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.15s ease;
+    padding: 0 6px;
+  }
+
+  :global(.pag-num:hover:not(.active)) {
+    border-color: var(--ink);
+  }
+
+  :global(.pag-num.active) {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  :global(.pag-ellipsis) {
+    padding: 0 4px;
+    color: var(--ink-soft);
+    font-size: 13px;
   }
 
   .results-list {
