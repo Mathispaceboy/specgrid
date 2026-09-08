@@ -93,7 +93,9 @@ export async function POST(context) {
   const contactPhone = (body.contactPhone || '').trim() || null;
   const whatsappNumber = (body.whatsappNumber || '').trim() || null;
   const sourceNote = (body.sourceNote || 'CODISSIA Inter Die Casting Expo 2026').trim();
-  const status = ['verified', 'founding', 'draft'].includes(body.status) ? body.status : 'verified';
+  // Default new indexed profiles to 'draft' (unclaimed public catalog entry)
+  const status = ['draft', 'claimed', 'verified', 'founding'].includes(body.status) ? body.status : 'draft';
+
 
   try {
     const statements = [
@@ -125,8 +127,9 @@ export async function POST(context) {
       )
     ];
 
-    // Handle Certifications
+    // Handle Certifications: draft entries start as unverified (verified = 0)
     if (Array.isArray(body.certifications)) {
+      const isCertVerified = (status === 'verified' || status === 'founding') ? 1 : 0;
       for (const cert of body.certifications) {
         const certName = typeof cert === 'string' ? cert.trim() : (cert?.name || '').trim();
         const issuingBody = typeof cert === 'object' && cert?.issuingBody ? cert.issuingBody.trim() : null;
@@ -134,12 +137,13 @@ export async function POST(context) {
           statements.push(
             db.prepare(`
               INSERT INTO certifications (id, company_id, name, issuing_body, verified)
-              VALUES (?, ?, ?, ?, 1)
-            `).bind(crypto.randomUUID(), id, certName, issuingBody)
+              VALUES (?, ?, ?, ?, ?)
+            `).bind(crypto.randomUUID(), id, certName, issuingBody, isCertVerified)
           );
         }
       }
     }
+
 
     await db.batch(statements);
 

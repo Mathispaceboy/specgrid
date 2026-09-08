@@ -145,7 +145,11 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
         '<div class="admin-card quick-add-card">' +
           '<div class="card-label mono">05 // Quick-Add Manufacturer Intake &middot; CODISSIA &amp; Expos</div>' +
           '<h2 class="card-title" style="font-size: 18px;">Quick-Add Manufacturer</h2>' +
-          '<p class="card-sub">Fast on-the-fly intake for exhibitors met at CODISSIA (e.g. Inter Die Casting Expo) and industrial expos. Generates live catalog profile, Spec ID, and 1-tap WhatsApp follow-up link.</p>' +
+          '<p class="card-sub">Fast on-the-fly intake for exhibitors met at CODISSIA (e.g. Inter Die Casting Expo) and industrial expos. Generates an indexed catalog profile (Draft status), assigns Spec ID, and creates an invite link for the company to claim and verify their listing.</p>' +
+
+          '<div class="workflow-explainer mono">' +
+            '<strong>Workflow:</strong> 1. Intake as <em>Draft Profile</em> &rarr; 2. Share WhatsApp claim invite &rarr; 3. Exhibitor submits at <code>/claim/[slug]</code> &rarr; 4. Claim appears in <em>02 // Claim Moderation Queue</em> above &rarr; 5. You verify checklist and click <em>Approve as Verified</em>.' +
+          '</div>' +
 
           '<div class="preset-group">' +
             '<span class="mono" style="font-size: 11.5px; color: var(--ink-soft); display: block; margin-bottom: 6px;">Expo Quick Presets:</span>' +
@@ -211,12 +215,14 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
 
             '<div class="fld-grid">' +
               '<div class="fld">' +
-                '<label for="qa_status" class="fld-label mono">Verification Status</label>' +
+                '<label for="qa_status" class="fld-label mono">Initial Status</label>' +
                 '<select id="qa_status" class="fld-input custom-select">' +
-                  '<option value="verified" selected>Verified (In-person booth verified)</option>' +
+                  '<option value="draft" selected>Draft Profile (Standard Unclaimed Entry)</option>' +
+                  '<option value="claimed">Claimed Profile (Domain Matched)</option>' +
+                  '<option value="verified">Verified (Manual Protocol Completed)</option>' +
                   '<option value="founding">Founding Member</option>' +
-                  '<option value="draft">Draft Profile</option>' +
                 '</select>' +
+                '<div class="fld-hint mono">New entries start as Draft. Only mark Verified if you have already completed full manual review.</div>' +
               '</div>' +
               '<div class="fld">' +
                 '<label for="qa_sourcenote" class="fld-label mono">Source / Event Note</label>' +
@@ -244,22 +250,24 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
           '<!-- Post-Submission Instant Action Panel -->' +
           '<div id="qaSuccessCard" class="qa-success-card" style="display: none;">' +
             '<div class="qa-success-header">' +
-              '<span class="badge badge-verified mono" id="qaSuccessBadge">VERIFIED SUPPLIER</span>' +
+              '<span class="badge badge-draft mono" id="qaSuccessBadge">DRAFT PROFILE (INDEXED)</span>' +
               '<span class="mono" id="qaSuccessSpecId" style="font-size: 13px; color: var(--ink-soft);"></span>' +
             '</div>' +
             '<h3 id="qaSuccessName" class="qa-success-title"></h3>' +
             '<p id="qaSuccessUrl" class="mono qa-success-url"></p>' +
             '<div class="qa-action-buttons">' +
               '<a id="qaViewProfileBtn" href="#" target="_blank" class="btn btn-dark btn-sm">Open Live Profile &rarr;</a>' +
+              '<a id="qaClaimLink" href="#" target="_blank" class="btn btn-ghost btn-sm mono">Open Claim Page &rarr;</a>' +
               '<a id="qaWaLink" href="#" target="_blank" class="btn wa-btn btn-sm">' +
                 '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.28-1.38c1.45.79 3.08 1.21 4.76 1.21h.01c5.46 0 9.9-4.45 9.9-9.91C21.96 6.45 17.5 2 12.04 2zm0 18.15h-.01c-1.5 0-2.97-.4-4.24-1.16l-.3-.18-3.15.83.84-3.08-.2-.32a8.19 8.19 0 01-1.26-4.4c0-4.53 3.7-8.22 8.24-8.22 2.2 0 4.27.86 5.83 2.42a8.14 8.14 0 012.41 5.81c0 4.54-3.7 8.23-8.24 8.23z"/></svg>' +
-                '<span>Send WhatsApp Follow-up</span>' +
+                '<span>Send WhatsApp Invite</span>' +
               '</a>' +
               '<button type="button" id="qaCopyBadgeBtn" class="btn btn-ghost btn-sm mono">Copy Badge HTML</button>' +
               '<button type="button" id="qaResetBtn" class="btn btn-ghost btn-sm mono">Add Another Exhibitor +</button>' +
             '</div>' +
           '</div>' +
         '</div>';
+
 
 
       refreshFoundingCount();
@@ -398,10 +406,29 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
             document.getElementById("qaSuccessSpecId").textContent = data.specId;
             document.getElementById("qaSuccessUrl").textContent = "specgrid.in" + data.profileUrl;
             document.getElementById("qaViewProfileBtn").href = data.profileUrl;
+            var claimLinkEl = document.getElementById("qaClaimLink");
+            if (claimLinkEl) claimLinkEl.href = "/claim/" + data.slug;
 
-            // WhatsApp link
+            var badgeEl = document.getElementById("qaSuccessBadge");
+            if (badgeEl) {
+              if (data.status === "verified") {
+                badgeEl.className = "badge badge-verified mono";
+                badgeEl.textContent = "VERIFIED SUPPLIER";
+              } else if (data.status === "founding") {
+                badgeEl.className = "badge badge-founding mono";
+                badgeEl.textContent = "FOUNDING MEMBER";
+              } else if (data.status === "claimed") {
+                badgeEl.className = "badge badge-claimed mono";
+                badgeEl.textContent = "CLAIMED PROFILE";
+              } else {
+                badgeEl.className = "badge badge-draft mono";
+                badgeEl.textContent = "DRAFT PROFILE (INDEXED)";
+              }
+            }
+
+            // WhatsApp link: Invite them to claim and verify
             var rawWa = payload.whatsappNumber ? payload.whatsappNumber.replace(/[^0-9]/g, "") : "";
-            var waGreeting = "Hi " + payload.name + " team, great connecting at the Inter Die Casting Expo at CODISSIA today! We have published your verified engineering profile on SpecGrid: https://specgrid.in" + data.profileUrl + " — let me know if you'd like to update any machine specs, casting tonnage, or certifications!";
+            var waGreeting = "Hi " + payload.name + " team, great connecting at the Inter Die Casting Expo at CODISSIA today! We have indexed your catalog profile on SpecGrid: https://specgrid.in" + data.profileUrl + " — you can review and claim your free profile to update your machine specs, casting tonnage, and verified certifications: https://specgrid.in/claim/" + data.slug;
             var waLinkEl = document.getElementById("qaWaLink");
             if (rawWa) {
               waLinkEl.href = "https://wa.me/" + rawWa + "?text=" + encodeURIComponent(waGreeting);
@@ -413,11 +440,12 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
             // Copy Badge Snippet
             var copyBadgeBtn = document.getElementById("qaCopyBadgeBtn");
             copyBadgeBtn.onclick = function(){
-              var snippet = '<a href="https://specgrid.in' + data.profileUrl + '" target="_blank" rel="noopener"><img src="https://specgrid.in/badge/' + data.slug + '.svg" alt="' + esc(data.name) + ' SpecGrid Verified" width="320" height="64" /></a>';
+              var snippet = '<a href="https://specgrid.in' + data.profileUrl + '" target="_blank" rel="noopener"><img src="https://specgrid.in/badge/' + data.slug + '.svg" alt="' + esc(data.name) + ' SpecGrid Profile" width="320" height="64" /></a>';
               navigator.clipboard.writeText(snippet);
               copyBadgeBtn.textContent = "Copied!";
               setTimeout(function(){ copyBadgeBtn.textContent = "Copy Badge HTML"; }, 2000);
             };
+
 
             // Reset Button
             document.getElementById("qaResetBtn").onclick = function(){
@@ -1012,9 +1040,21 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
     min-height: 80px;
   }
 
+  :global(.workflow-explainer) {
+    margin: 14px 0 10px;
+    padding: 10px 14px;
+    background: #FDFBF7;
+    border: 1px solid rgba(184, 122, 30, 0.35);
+    border-radius: var(--radius);
+    color: var(--ink);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
   :global(.preset-group) {
     margin: 14px 0 6px;
     padding: 12px 14px;
+
     background: rgba(0, 0, 0, 0.02);
     border: 1px dashed var(--paper-line);
     border-radius: var(--radius);
