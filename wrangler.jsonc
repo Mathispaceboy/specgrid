@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "specgrid-web",
+  "compatibility_date": "2026-08-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "build": {
+    "command": "cd web && npm install && npm run build"
+  },
+  "main": "./web/dist/_worker.js/index.js",
+  "assets": {
+    "directory": "./web/dist",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "specgrid-db",
+      "database_id": "d91ecc07-a703-4b4b-bd18-1942b288c27b"
+    }
+  ]
+}

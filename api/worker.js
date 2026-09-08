@@ -121,7 +121,15 @@ async function handleListCompanies(url, env) {
   if (category) { where.push("category_id = ?"); binds.push(category); }
   if (companyType) { where.push("company_type = ?"); binds.push(companyType); }
   if (state) { where.push("location_state = ?"); binds.push(state); }
-  if (q) { where.push("(name LIKE ? OR description LIKE ?)"); binds.push(`%${q}%`, `%${q}%`); }
+  if (q) {
+    where.push(`(
+      name LIKE ? OR description LIKE ?
+      OR EXISTS (SELECT 1 FROM products p WHERE p.company_id = companies.id AND (p.name LIKE ? OR p.description LIKE ? OR p.specs LIKE ?))
+      OR EXISTS (SELECT 1 FROM certifications c WHERE c.company_id = companies.id AND (c.name LIKE ? OR c.issuing_body LIKE ?))
+    )`);
+    const qTerm = `%${q}%`;
+    binds.push(qTerm, qTerm, qTerm, qTerm, qTerm, qTerm, qTerm);
+  }
   if (hasCertification === "true") {
     where.push("EXISTS (SELECT 1 FROM certifications WHERE certifications.company_id = companies.id)");
   }
@@ -129,7 +137,31 @@ async function handleListCompanies(url, env) {
   const countStmt = env.DB.prepare(`SELECT COUNT(*) as c FROM companies ${whereSql}`).bind(...binds);
   const listStmt = env.DB.prepare(`SELECT ${PUBLIC_COMPANY_FIELDS} FROM companies ${whereSql} ORDER BY name ASC LIMIT ? OFFSET ?`).bind(...binds, limit, offset);
   const [countRes, listRes] = await Promise.all([countStmt.all(), listStmt.all()]);
-  return json({ total: countRes.results?.[0]?.c ?? 0, limit, offset, results: (listRes.results || []).map(serializePublicCompany) });
+  const companies = (listRes.results || []).map(serializePublicCompany);
+
+  if (companies.length > 0) {
+    const companyIds = companies.map(c => c.id);
+    const placeholders = companyIds.map(() => "?").join(",");
+    const prodsRes = await env.DB.prepare(
+      `SELECT company_id, name, specs FROM products WHERE company_id IN (${placeholders}) ORDER BY created_at ASC`
+    ).bind(...companyIds).all();
+
+    const prodsByCompany = {};
+    for (const p of (prodsRes.results || [])) {
+      if (!prodsByCompany[p.company_id]) prodsByCompany[p.company_id] = [];
+      let parsedSpecs = null;
+      if (p.specs) {
+        try { parsedSpecs = JSON.parse(p.specs); } catch (e) { parsedSpecs = null; }
+      }
+      prodsByCompany[p.company_id].push({ name: p.name, specs: parsedSpecs });
+    }
+
+    for (const c of companies) {
+      c.products = prodsByCompany[c.id] || [];
+    }
+  }
+
+  return json({ total: countRes.results?.[0]?.c ?? 0, limit, offset, results: companies });
 }
 
 const COMPANY_TYPES = ["manufacturer", "trader_distributor", "service_provider", "epc_contractor", "other"];

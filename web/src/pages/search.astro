@@ -40,7 +40,7 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
             name="q"
             type="text"
             autocomplete="off"
-            placeholder='Search "800T die casting", "CNC precision machining", "switchgear", "pumps"...'
+            placeholder='Search technical parameters: "800T die casting", "36kV VCB", "CPRI", "pipe-in-pipe", "IS 1180"...'
             class="search-input"
           />
           <button type="submit" class="btn btn-primary search-submit-btn" aria-label="Search">
@@ -48,6 +48,21 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
           </button>
         </div>
       </form>
+
+      <!-- Quick Technical Parameter Shortcuts -->
+      <div class="quick-specs-bar">
+        <span class="quick-specs-label mono">SPEC SHORTCUTS:</span>
+        <div class="quick-specs-chips">
+          <a href="/search?q=800T" class="quick-chip mono">800T Die Casting</a>
+          <a href="/search?q=36kV" class="quick-chip mono">36kV Switchgear</a>
+          <a href="/search?q=CPRI" class="quick-chip mono">CPRI Type-Tested</a>
+          <a href="/search?q=Pipe-in-Pipe" class="quick-chip mono">Pipe-in-Pipe Earthing</a>
+          <a href="/search?q=IS+1180" class="quick-chip mono">IS 1180 Transformers</a>
+          <a href="/search?q=H13" class="quick-chip mono">H13 Tool Steel</a>
+          <a href="/search?q=CNC" class="quick-chip mono">CNC Toolroom</a>
+          <a href="/search?q=Vacuum" class="quick-chip mono">Vacuum Interrupters</a>
+        </div>
+      </div>
     </section>
 
 
@@ -282,6 +297,32 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
           const safeMeta = metaBits.filter(Boolean).join(" · ").replace(/</g, "&lt;");
           const safeDesc = co.description ? co.description.replace(/</g, "&lt;").slice(0, 160) : "";
 
+          let productsHtml = "";
+          if (co.products && co.products.length > 0) {
+            const chips = [];
+            co.products.slice(0, 3).forEach(prod => {
+              let cleanName = (prod.name || "")
+                .replace(/^(Product Range|Flagship Product|Flagship Technology|Die Casting Tooling|Injection Molds|Distribution Transformers|Products|Services|Capabilities):\s*/i, "");
+              if (cleanName.length > 40) cleanName = cleanName.slice(0, 38) + "…";
+              chips.push('<span class="card-prod-chip">' + cleanName.replace(/</g, "&lt;") + '</span>');
+
+              if (prod.specs && typeof prod.specs === "object") {
+                for (const [k, v] of Object.entries(prod.specs)) {
+                  const kLower = k.toLowerCase();
+                  if (kLower.includes("tonnage") || kLower.includes("voltage") || kLower.includes("breaking") || kLower.includes("standard") || kLower.includes("fault") || kLower.includes("efficiency") || kLower.includes("capacity")) {
+                    let valStr = String(v);
+                    if (valStr.length > 35) valStr = valStr.slice(0, 33) + "…";
+                    chips.push('<span class="card-spec-highlight mono">' + k.replace(/</g, "&lt;") + ': ' + valStr.replace(/</g, "&lt;") + '</span>');
+                    break;
+                  }
+                }
+              }
+            });
+            if (chips.length > 0) {
+              productsHtml = '<div class="card-products-strip">' + chips.join("") + '</div>';
+            }
+          }
+
           card.innerHTML =
             '<div class="card-top">' +
               '<div>' +
@@ -291,8 +332,9 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
               '<span class="badge ' + statusBadgeCls + '">' + statusBadge + '</span>' +
             '</div>' +
             (safeDesc ? '<p class="card-desc">' + safeDesc + '&hellip;</p>' : '') +
+            productsHtml +
             '<div class="card-foot mono">' +
-              '<span>View technical profile</span>' +
+              '<span>View verified specifications & tooling</span>' +
               '<span class="card-arrow">&rarr;</span>' +
             '</div>';
 
@@ -350,6 +392,71 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
   .search-submit-btn {
     padding: 10px 18px;
     font-size: 13px;
+  }
+
+  .quick-specs-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+
+  .quick-specs-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    letter-spacing: 0.08em;
+  }
+
+  .quick-specs-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .quick-chip {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: var(--radius);
+    background: var(--paper);
+    border: 1px solid var(--paper-line);
+    color: var(--ink);
+    text-decoration: none;
+    transition: all 0.15s ease;
+  }
+
+  .quick-chip:hover {
+    border-color: var(--ink);
+    background: var(--card);
+    transform: translateY(-1px);
+  }
+
+  :global(.card-products-strip) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  :global(.card-prod-chip) {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 3px;
+    background: rgba(20, 36, 46, 0.04);
+    color: var(--ink);
+    border: 1px solid var(--paper-line);
+  }
+
+  :global(.card-spec-highlight) {
+    font-size: 10.5px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    background: var(--green-soft);
+    color: var(--green-deep);
+    border: 1px solid rgba(31, 111, 74, 0.2);
+    font-weight: 600;
   }
 
   /* Two-column layout */
