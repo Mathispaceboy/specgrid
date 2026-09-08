@@ -41,7 +41,44 @@ try {
 }
 
 const loc = co ? [co.location && co.location.city, co.location && co.location.state].filter(Boolean).join(", ") : "";
-const certs = co ? (co.certifications || []) : [];
+let certs = co ? (co.certifications || []) : [];
+let products = co ? (co.products || []) : [];
+
+// If runtime DB binding exists, ensure products and certs are fully loaded
+const runtime = Astro.locals?.runtime || {};
+const env = runtime.env || {};
+if (co && env.DB && (!products.length || !certs.length)) {
+  try {
+    const [pRes, cRes] = await Promise.all([
+      env.DB.prepare(`SELECT id, name, slug, description, specs FROM products WHERE company_id = ? ORDER BY created_at ASC`).bind(co.id).all(),
+      env.DB.prepare(`SELECT id, name, issuing_body, valid_until, verified FROM certifications WHERE company_id = ?`).bind(co.id).all(),
+    ]);
+    if (pRes.results && pRes.results.length) {
+      products = pRes.results.map((p: any) => {
+        let parsed = null;
+        if (p.specs) {
+          try { parsed = JSON.parse(p.specs); } catch (e) { parsed = null; }
+        }
+        return {
+          id: p.id,
+          name: p.name,
+          slug: p.slug,
+          description: p.description,
+          specs: parsed,
+        };
+      });
+    }
+    if (cRes.results && cRes.results.length && !certs.length) {
+      certs = cRes.results.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        issuingBody: c.issuing_body,
+        validUntil: c.valid_until,
+        verified: !!c.verified,
+      }));
+    }
+  } catch (e) {}
+}
 
 // Verification badge and text logic matching D1 schema (draft, claimed, verified, founding)
 const isFounding = co?.status === "founding";
@@ -111,6 +148,9 @@ const orgJsonLd = co ? {
               {loc}
               {co.foundedYear && ` · Est. ${co.foundedYear}`}
               {co.companyType && ` · ${co.companyType.replace(/_/g, " ")}`}
+              {co.website && (
+                <span> &middot; <a href={co.website} target="_blank" rel="noopener noreferrer" class="web-direct-link">Official Website &rarr;</a></span>
+              )}
             </div>
 
             <!-- Verification Tier Explanation -->
@@ -150,11 +190,46 @@ const orgJsonLd = co ? {
           </section>
         )}
 
+        <!-- Manufactured Products & Technical Capabilities Section -->
+        {products.length > 0 && (
+          <section class="profile-section">
+            <div class="section-label mono">02 // Manufactured Products &amp; Technical Capabilities</div>
+            <h2>Products &amp; Technical Specifications</h2>
+            <div class="products-grid">
+              {products.map((prod: any) => (
+                <div class="product-card">
+                  <div class="prod-top">
+                    <span class="mono prod-tag">SPECIFICATION ENVELOPE</span>
+                    <span class="prod-badge-verified mono">&#10003; DIRECT SPEC</span>
+                  </div>
+                  <h3 class="prod-title">{prod.name}</h3>
+                  {prod.description && <p class="prod-desc">{prod.description}</p>}
+
+                  {prod.specs && Object.keys(prod.specs).length > 0 && (
+                    <div class="specs-table-wrapper">
+                      <table class="specs-table mono">
+                        <tbody>
+                          {Object.entries(prod.specs).map(([k, v]) => (
+                            <tr>
+                              <td class="spec-prop">{k}</td>
+                              <td class="spec-val">{String(v)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         <!-- Certifications Section -->
         {certs.length > 0 && (
           <section class="profile-section">
-            <div class="section-label mono">02 // Testing &amp; Standards</div>
-            <h2>Certifications</h2>
+            <div class="section-label mono">{products.length > 0 ? "03 // Testing & Standards" : "02 // Testing & Standards"}</div>
+            <h2>Certifications &amp; Test Approvals</h2>
             <div class="certs-list">
               {certs.map((c: any) => (
                 <div class="cert-item">
@@ -173,7 +248,7 @@ const orgJsonLd = co ? {
 
         <!-- Enquire & Direct Communication Section -->
         <section class="profile-section enquire-action-panel">
-          <div class="section-label mono">03 // Direct Inquiries</div>
+          <div class="section-label mono">{products.length > 0 ? "04 // Direct Inquiries" : "03 // Direct Inquiries"}</div>
           <h2>Enquire</h2>
           <p class="enquire-note">
             SpecGrid mediates all enquiries &mdash; your contact details go to the supplier only after you submit.
@@ -206,7 +281,7 @@ const orgJsonLd = co ? {
 
         <!-- P9C: Embeddable Profile Badge -->
         <section class="profile-section badge-embed-section">
-          <div class="section-label mono">04 // Verification Embed &middot; P9C</div>
+          <div class="section-label mono">{products.length > 0 ? "05 // Verification Embed · P9C" : "04 // Verification Embed · P9C"}</div>
           <h2>Proof of Listing</h2>
           <p class="enquire-note">
             Feature this official SpecGrid catalog specification on your company website, documentation, or email signature.
@@ -430,11 +505,111 @@ const orgJsonLd = co ? {
     letter-spacing: -0.01em;
   }
 
-  .about-text {
-    font-size: 14.5px;
+  .web-direct-link {
+    color: var(--green);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-weight: 600;
+    transition: color 0.15s ease;
+  }
+
+  .web-direct-link:hover {
+    color: var(--ink);
+  }
+
+  /* Products & Capabilities Grid */
+  .products-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .product-card {
+    background: var(--paper);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.15s ease;
+  }
+
+  .product-card:hover {
+    border-color: var(--ink);
+  }
+
+  .prod-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .prod-tag {
+    font-size: 10px;
+    color: var(--green);
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+
+  .prod-badge-verified {
+    font-size: 10px;
+    background: var(--paper-card);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    padding: 2px 6px;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .prod-title {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  .prod-desc {
+    font-size: 14px;
+    line-height: 1.6;
     color: var(--ink-soft);
-    line-height: 1.7;
-    margin: 0;
+    margin-bottom: 16px;
+  }
+
+  .specs-table-wrapper {
+    margin-top: auto;
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--card);
+  }
+
+  .specs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .specs-table tr:not(:last-child) {
+    border-bottom: 1px solid var(--paper-line);
+  }
+
+  .spec-prop {
+    padding: 8px 12px;
+    color: var(--ink-soft);
+    background: rgba(20, 36, 46, 0.03);
+    width: 38%;
+    font-weight: 500;
+    vertical-align: top;
+  }
+
+  .spec-val {
+    padding: 8px 12px;
+    color: var(--ink);
+    font-weight: 600;
+    vertical-align: top;
+    line-height: 1.45;
   }
 
   /* Certifications */

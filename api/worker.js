@@ -144,8 +144,24 @@ async function handleGetCompany(slug, env) {
   const { results } = await env.DB.prepare(`SELECT ${PUBLIC_COMPANY_FIELDS} FROM companies WHERE slug = ? AND public_visible = 1`).bind(slug).all();
   if (!results || results.length === 0) return notFound("Company not found");
   const company = serializePublicCompany(results[0]);
-  const certsRes = await env.DB.prepare(`SELECT id, name, issuing_body, valid_until, verified FROM certifications WHERE company_id = ?`).bind(company.id).all();
+  const [certsRes, prodsRes] = await Promise.all([
+    env.DB.prepare(`SELECT id, name, issuing_body, valid_until, verified FROM certifications WHERE company_id = ?`).bind(company.id).all(),
+    env.DB.prepare(`SELECT id, name, slug, description, specs FROM products WHERE company_id = ? ORDER BY created_at ASC`).bind(company.id).all(),
+  ]);
   company.certifications = (certsRes.results || []).map(serializeCertification);
+  company.products = (prodsRes.results || []).map(p => {
+    let parsedSpecs = null;
+    if (p.specs) {
+      try { parsedSpecs = JSON.parse(p.specs); } catch (e) { parsedSpecs = null; }
+    }
+    return {
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      description: p.description,
+      specs: parsedSpecs,
+    };
+  });
   return json(company);
 }
 
