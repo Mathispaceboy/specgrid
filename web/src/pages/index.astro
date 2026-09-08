@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
 
 const websiteJsonLd = {
   "@context": "https://schema.org",
@@ -22,6 +23,10 @@ const popularChips = [
   { label: "Solar Energy", href: "/search?category=solar" },
   { label: "Coimbatore", href: "/search?q=Coimbatore" },
 ];
+
+const allRadar = await getCollection('radar');
+allRadar.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+const latestRadar = allRadar.slice(0, 3);
 
 const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
 ---
@@ -197,6 +202,39 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
         </div>
       </div>
     </section>
+
+    <!-- Radar Technical Dispatches Preview -->
+    {latestRadar.length > 0 && (
+      <section class="radar-preview-sec">
+        <div class="wrap">
+          <div class="sec-top">
+            <div>
+              <div class="divider" style="margin-bottom: 8px;">Technical Intelligence</div>
+              <h2>SpecGrid Intelligence Radar</h2>
+            </div>
+            <a href="/radar" class="see-all-link mono">Explore all dispatches &rarr;</a>
+          </div>
+
+          <div class="radar-preview-grid">
+            {latestRadar.map(post => (
+              <a href={`/radar/${post.data.slug || post.id}`} class="radar-preview-card">
+                <div class="rpc-meta mono">
+                  <span class="rpc-cat">{post.data.category}</span>
+                  <span class="sep">&middot;</span>
+                  <span>{post.data.date}</span>
+                </div>
+                <h3 class="rpc-title">{post.data.title}</h3>
+                <p class="rpc-summary">{post.data.summary}</p>
+                <div class="rpc-footer mono">
+                  <span>Read Spec Brief</span>
+                  <span class="rpc-arrow">&rarr;</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
   </div>
 </BaseLayout>
 
@@ -546,6 +584,97 @@ const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
     align-items: center;
     border-bottom: 1px solid var(--paper-line);
     padding-bottom: 10px;
+  }
+
+  /* Radar Preview Section */
+  .radar-preview-sec {
+    padding: 48px 0;
+    border-bottom: 1px solid var(--paper-line);
+  }
+
+  .radar-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .radar-preview-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--card);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    padding: 22px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .radar-preview-card:hover {
+    border-color: var(--ink);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(20, 36, 46, 0.05);
+  }
+
+  .rpc-meta {
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .rpc-cat {
+    color: var(--green);
+    font-weight: 600;
+  }
+
+  .rpc-title {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.35;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+
+  .rpc-summary {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin-bottom: 16px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .rpc-footer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-top: auto;
+  }
+
+  .radar-preview-card:hover .rpc-footer {
+    color: var(--green);
+  }
+
+  .rpc-arrow {
+    transition: transform 0.15s ease;
+  }
+
+  .radar-preview-card:hover .rpc-arrow {
+    transform: translateX(3px);
+  }
+
+  @media (max-width: 960px) {
+    .radar-preview-grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   @media (max-width: 820px) {

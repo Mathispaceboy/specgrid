@@ -1,0 +1,507 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const posts = await getCollection('radar');
+
+// Sort by date descending
+posts.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+
+// Compute reading times
+const enrichedPosts = posts.map(post => {
+  const wordCount = (post.body || '').split(/\s+/).filter(Boolean).length;
+  const readingTime = Math.max(1, Math.ceil(wordCount / 200)) + " min read";
+  return {
+    ...post,
+    readingTime,
+  };
+});
+
+// Extract unique categories
+const categories = Array.from(new Set(posts.map(p => p.data.category))).filter(Boolean);
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "SpecGrid Radar | Technical Intelligence & Procurement Frameworks",
+  "description": "Deep-dive technical evaluation frameworks, cluster capabilities, and procurement guides for industrial engineers and technical buyers.",
+  "url": "https://specgrid.in/radar",
+  "publisher": {
+    "@type": "Organization",
+    "name": "SpecGrid",
+    "url": "https://specgrid.in"
+  }
+};
+---
+
+<BaseLayout
+  title="SpecGrid Radar // Technical Procurement Intelligence & Cluster Guides"
+  description="Technical evaluation frameworks, cluster capabilities, and manufacturing specification guides for industrial procurement engineers."
+  canonicalPath="/radar"
+  jsonLd={jsonLd}
+>
+  <section class="radar-hero">
+    <div class="wrap">
+      <div class="sys-meta mono">
+        <span class="pulse-dot"></span>
+        <span>INDEX // RADAR-INTEL-01</span>
+        <span class="sep">&middot;</span>
+        <span>FIELD DISPATCH STREAM</span>
+        <span class="sep">&middot;</span>
+        <span>CLUSTER: COIMBATORE / TN</span>
+      </div>
+
+      <h1 class="radar-title">Intelligence Radar</h1>
+      <p class="radar-lead">
+        Rigorous engineering teardowns, regional manufacturing cluster guides, and procurement specifications. Built for technical buyers, EPC engineers, and plant managers who evaluate suppliers by parameters, not advertising spend.
+      </p>
+
+      <!-- Category Filter Pills -->
+      <div class="category-filters" id="categoryFilters" role="tablist" aria-label="Filter by Category">
+        <button type="button" class="filter-btn active" data-cat="all" role="tab" aria-selected="true">
+          All Dispatches ({posts.length})
+        </button>
+        {categories.map(cat => (
+          <button type="button" class="filter-btn" data-cat={cat} role="tab" aria-selected="false">
+            {cat}
+          </button>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Feed Grid -->
+  <section class="radar-stream">
+    <div class="wrap">
+      <div class="stream-grid" id="radarGrid">
+        {enrichedPosts.map(post => (
+          <article class="dispatch-card" data-category={post.data.category}>
+            <div class="card-meta mono">
+              <span class="meta-tag">{post.data.category}</span>
+              <span class="sep">&middot;</span>
+              <span class="meta-date">{post.data.date}</span>
+              <span class="sep">&middot;</span>
+              <span class="meta-read">{post.readingTime}</span>
+            </div>
+
+            <h2 class="card-title">
+              <a href={`/radar/${post.data.slug || post.id}`}>{post.data.title}</a>
+            </h2>
+
+            <p class="card-summary">{post.data.summary}</p>
+
+            {post.data.target_specs && post.data.target_specs.length > 0 && (
+              <div class="spec-chips mono">
+                {post.data.target_specs.map(spec => (
+                  <span class="spec-chip">{spec}</span>
+                ))}
+              </div>
+            )}
+
+            <div class="card-footer">
+              <a href={`/radar/${post.data.slug || post.id}`} class="read-link mono">
+                <span>Read Technical Brief</span>
+                <span class="arrow">&rarr;</span>
+              </a>
+              <span class="author-label mono">Author: {post.data.author}</span>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <div class="empty-state mono" id="emptyState" style="display: none;">
+        No published dispatches found in this vertical.
+      </div>
+    </div>
+  </section>
+
+  <!-- Industrial Procurement Manifesto Callout -->
+  <section class="manifesto-callout">
+    <div class="wrap">
+      <div class="manifesto-box">
+        <div class="manifesto-header mono">
+          <span class="box-tag">SPECGRID DISCOVERY PROTOCOL</span>
+          <span class="box-status">ACTIVE STANDARD</span>
+        </div>
+        <div class="manifesto-body">
+          <div class="manifesto-content">
+            <h3>Direct Manufacturer Discovery. Zero Lead Resale.</h3>
+            <p>
+              Traditional B2B portals monetize by slicing buyer inquiries and selling them as contact leads to 5–10 trading brokers. SpecGrid indexes verified engineering capabilities—operating voltages, machine clamp tonnages, testing standards—and routes inquiries directly and exclusively to certified factories.
+            </p>
+          </div>
+          <div class="manifesto-actions">
+            <a href="/search" class="btn btn-primary">Browse Technical Directory &rarr;</a>
+            <a href="/for-suppliers" class="btn btn-secondary">Supplier Indexing Model</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script is:inline>
+  document.addEventListener('DOMContentLoaded', () => {
+    const filterBtns = document.querySelectorAll('#categoryFilters .filter-btn');
+    const cards = document.querySelectorAll('#radarGrid .dispatch-card');
+    const emptyState = document.getElementById('emptyState');
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+
+        const selectedCat = btn.getAttribute('data-cat');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+          const cardCat = card.getAttribute('data-category');
+          if (selectedCat === 'all' || cardCat === selectedCat) {
+            card.style.display = 'flex';
+            visibleCount++;
+          } else {
+            card.style.display = 'none';
+          }
+        });
+
+        if (emptyState) {
+          emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+      });
+    });
+  });
+</script>
+
+<style>
+  .radar-hero {
+    background: var(--paper-card);
+    border-bottom: 1px solid var(--paper-line);
+    padding: 56px 0 36px;
+  }
+
+  .sys-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    background: var(--paper);
+    padding: 4px 12px;
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+  }
+
+  .pulse-dot {
+    width: 7px;
+    height: 7px;
+    background: var(--green);
+    border-radius: 50%;
+    box-shadow: 0 0 0 0 rgba(31, 111, 74, 0.7);
+    animation: radarPulse 2s infinite;
+  }
+
+  @keyframes radarPulse {
+    0% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(31, 111, 74, 0.7);
+    }
+    70% {
+      transform: scale(1);
+      box-shadow: 0 0 0 6px rgba(31, 111, 74, 0);
+    }
+    100% {
+      transform: scale(0.95);
+      box-shadow: 0 0 0 0 rgba(31, 111, 74, 0);
+    }
+  }
+
+  .sep {
+    color: var(--paper-line);
+  }
+
+  .radar-title {
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 14px;
+    color: var(--ink);
+  }
+
+  .radar-lead {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 760px;
+    margin-bottom: 28px;
+  }
+
+  .category-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .filter-btn {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 7px 14px;
+    background: var(--paper);
+    color: var(--ink-soft);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .filter-btn:hover {
+    color: var(--ink);
+    border-color: var(--ink-soft);
+  }
+
+  .filter-btn.active {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  .radar-stream {
+    padding: 48px 0 64px;
+  }
+
+  .stream-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .dispatch-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--paper);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    padding: 28px;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .dispatch-card:hover {
+    border-color: var(--ink);
+    box-shadow: 0 4px 16px rgba(20, 36, 46, 0.05);
+    transform: translateY(-1px);
+  }
+
+  .card-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin-bottom: 12px;
+  }
+
+  .meta-tag {
+    color: var(--green);
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  .card-title {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+  }
+
+  .card-title a {
+    color: var(--ink);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  .card-title a:hover {
+    color: var(--green);
+  }
+
+  .card-summary {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    margin-bottom: 18px;
+    max-width: 820px;
+  }
+
+  .spec-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+
+  .spec-chip {
+    font-size: 11px;
+    padding: 3px 8px;
+    background: var(--paper-card);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    color: var(--ink);
+  }
+
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--paper-line);
+    padding-top: 16px;
+    margin-top: auto;
+    font-size: 12px;
+  }
+
+  .read-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+    transition: gap 0.15s ease, color 0.15s ease;
+  }
+
+  .read-link:hover {
+    color: var(--green);
+    gap: 9px;
+  }
+
+  .author-label {
+    color: var(--ink-soft);
+  }
+
+  .empty-state {
+    padding: 48px 0;
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 14px;
+    border: 1px dashed var(--paper-line);
+    border-radius: var(--radius);
+  }
+
+  /* Manifesto Box */
+  .manifesto-callout {
+    padding-bottom: 72px;
+  }
+
+  .manifesto-box {
+    background: var(--paper-card);
+    border: 1.5px solid var(--ink);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .manifesto-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  .manifesto-body {
+    padding: 28px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 24px;
+  }
+
+  .manifesto-content {
+    max-width: 680px;
+  }
+
+  .manifesto-content h3 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+
+  .manifesto-content p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  .manifesto-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: all 0.15s ease;
+  }
+
+  .btn-primary {
+    background: var(--green);
+    color: #ffffff;
+    border: 1px solid var(--green);
+  }
+
+  .btn-primary:hover {
+    background: #185a3c;
+    border-color: #185a3c;
+  }
+
+  .btn-secondary {
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--paper-line);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--ink);
+  }
+
+  @media (max-width: 768px) {
+    .radar-title {
+      font-size: 30px;
+    }
+    .card-title {
+      font-size: 19px;
+    }
+    .dispatch-card {
+      padding: 20px;
+    }
+    .manifesto-body {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>

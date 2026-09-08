@@ -17,6 +17,8 @@ export const MIGRATED_ROUTES = new Set([
   // Phase 6: Authenticated Portals & Admin
   '/account',
   '/admin',
+  // RADAR: Technical Intelligence Engine
+  '/radar',
   // Phase 7: Utility Endpoints & System
   '/robots.txt',
   '/sitemap.xml',
@@ -39,8 +41,11 @@ function isMigrated(pathname) {
   if (p.startsWith('/badge/')) return true;
   // API Routes (e.g. /api/admin/create-company)
   if (p.startsWith('/api/')) return true;
+  // RADAR Dispatches
+  if (p.startsWith('/radar/')) return true;
   return false;
 }
+
 
 function injectNoIndex(html) {
   const metaTag = '<meta name="robots" content="noindex, nofollow">';

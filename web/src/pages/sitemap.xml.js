@@ -1,3 +1,5 @@
+import { getCollection } from 'astro:content';
+
 const SITE_URL = 'https://specgrid.in';
 const API_BASE = 'https://specgrid-api.mathispaceboy.workers.dev';
 
@@ -18,11 +20,24 @@ export async function GET(context) {
     `${SITE_URL}/`,
     `${SITE_URL}/search`,
     `${SITE_URL}/for-suppliers`,
+    `${SITE_URL}/radar`,
     `${SITE_URL}/about`,
     `${SITE_URL}/terms`,
     `${SITE_URL}/privacy`,
     `${SITE_URL}/data-disclaimer`,
   ];
+
+  try {
+    const radarPosts = await getCollection('radar');
+    for (const post of radarPosts) {
+      const slug = post.data?.slug || post.id;
+      if (slug) {
+        urls.push(`${SITE_URL}/radar/${slug}`);
+      }
+    }
+  } catch (err) {
+    console.error('Sitemap fetch radar error:', err);
+  }
 
   try {
     let res;

@@ -1,0 +1,767 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection, getEntry, render } from 'astro:content';
+
+const { slug } = Astro.params;
+if (!slug) {
+  return Astro.redirect('/radar');
+}
+
+const post = await getEntry('radar', slug);
+if (!post) {
+  return Astro.redirect('/404');
+}
+
+const { Content, headings } = await render(post);
+
+// Calculate reading time
+const wordCount = (post.body || '').split(/\s+/).filter(Boolean).length;
+const readingTime = Math.max(1, Math.ceil(wordCount / 200)) + " min read";
+
+// Filter headings for TOC (H2 and H3)
+const tocHeadings = headings.filter(h => h.depth === 2 || h.depth === 3);
+
+// Fetch related dispatches
+const allPosts = await getCollection('radar');
+const relatedPosts = allPosts
+  .filter(p => (p.data.slug || p.id) !== (post.data.slug || post.id))
+  .slice(0, 2);
+
+const siteUrl = "https://specgrid.in";
+const canonicalPath = `/radar/${post.data.slug || post.id}`;
+const canonicalUrl = `${siteUrl}${canonicalPath}`;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": `${canonicalUrl}#article`,
+      "isPartOf": {
+        "@type": "WebPage",
+        "@id": canonicalUrl
+      },
+      "headline": post.data.title,
+      "description": post.data.summary,
+      "datePublished": post.data.date,
+      "dateModified": post.data.date,
+      "author": {
+        "@type": "Person",
+        "name": post.data.author || "Mathivanan Thangavel"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "SpecGrid",
+        "url": siteUrl
+      },
+      "keywords": (post.data.target_specs || []).join(", ")
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": `${canonicalUrl}#breadcrumb`,
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": siteUrl
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Radar",
+          "item": `${siteUrl}/radar`
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": post.data.title,
+          "item": canonicalUrl
+        }
+      ]
+    }
+  ]
+};
+---
+
+<BaseLayout
+  title={`${post.data.title} // SpecGrid Radar`}
+  description={post.data.summary}
+  canonicalPath={canonicalPath}
+  jsonLd={jsonLd}
+>
+  <article class="dispatch-article">
+    <!-- Top Header / Titleblock -->
+    <header class="article-header">
+      <div class="wrap">
+        <div class="back-nav mono">
+          <a href="/radar" class="back-link">
+            <span>&larr;</span>
+            <span>Return to Radar Stream</span>
+          </a>
+          <span class="sep">/</span>
+          <span class="category-badge">{post.data.category}</span>
+        </div>
+
+        <div class="titleblock-meta mono">
+          <span>DISPATCH // {post.data.slug || post.id}</span>
+          <span class="sep">&middot;</span>
+          <span>DATE: {post.data.date}</span>
+          <span class="sep">&middot;</span>
+          <span>READ TIME: {readingTime}</span>
+          <span class="sep">&middot;</span>
+          <span>AUTHOR: {post.data.author}</span>
+        </div>
+
+        <h1 class="article-title">{post.data.title}</h1>
+        <p class="article-summary">{post.data.summary}</p>
+
+        {post.data.target_specs && post.data.target_specs.length > 0 && (
+          <div class="specs-bar">
+            <span class="specs-label mono">TARGET PARAMETERS:</span>
+            <div class="spec-chips mono">
+              {post.data.target_specs.map(spec => (
+                <span class="spec-chip">{spec}</span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </header>
+
+    <!-- Main Content Layout (Prose + Sticky Sidebar) -->
+    <div class="wrap article-layout">
+      <!-- Main Prose Body -->
+      <main class="radar-prose">
+        <Content />
+
+        <!-- Vertical Sourcing CTA Box -->
+        <div class="in-article-cta">
+          <div class="cta-banner-header mono">
+            <span>VERIFIED SOURCING PROTOCOL</span>
+            <span>SPECGRID DIRECT</span>
+          </div>
+          <div class="cta-banner-body">
+            <h3>Ready to evaluate verified manufacturers?</h3>
+            <p>
+              SpecGrid connects engineering teams directly to ISO-certified, testing-verified component fabricators without brokers or lead reselling.
+            </p>
+            <a href={post.data.cta_url} class="btn btn-primary cta-btn">
+              <span>{post.data.cta_text}</span>
+              <span>&rarr;</span>
+            </a>
+          </div>
+        </div>
+      </main>
+
+      <!-- Sticky Sidebar -->
+      <aside class="article-sidebar">
+        <div class="sidebar-inner">
+          {tocHeadings.length > 0 && (
+            <div class="toc-card">
+              <div class="toc-header mono">TABLE OF CONTENTS</div>
+              <nav class="toc-list">
+                {tocHeadings.map(heading => (
+                  <a
+                    href={`#${heading.slug}`}
+                    class={`toc-item depth-${heading.depth}`}
+                  >
+                    {heading.text}
+                  </a>
+                ))}
+              </nav>
+            </div>
+          )}
+
+          <!-- Sourcing Card in Sidebar -->
+          <div class="sidebar-cta-card">
+            <div class="card-tag mono">DIRECT DIRECTORY</div>
+            <h4>Explore {post.data.category}</h4>
+            <p>Match manufacturers by voltage, machine tonnage, and CPRI/ERDA testing compliance.</p>
+            <a href={post.data.cta_url} class="sidebar-cta-link mono">
+              <span>{post.data.cta_text}</span>
+              <span>&rarr;</span>
+            </a>
+          </div>
+
+          <!-- Share / Copy Action -->
+          <div class="share-card mono">
+            <button type="button" class="copy-link-btn" id="copyShareBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+              <span id="copyBtnText">Copy Spec Brief Link</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Related Dispatches Section -->
+    {relatedPosts.length > 0 && (
+      <section class="related-dispatches">
+        <div class="wrap">
+          <div class="related-header">
+            <h3 class="related-title">Additional Engineering Briefs</h3>
+            <a href="/radar" class="mono all-link">View All Radar Dispatches &rarr;</a>
+          </div>
+
+          <div class="related-grid">
+            {relatedPosts.map(rel => (
+              <div class="related-card">
+                <div class="rel-meta mono">
+                  <span class="rel-cat">{rel.data.category}</span>
+                  <span class="sep">&middot;</span>
+                  <span>{rel.data.date}</span>
+                </div>
+                <h4 class="rel-title">
+                  <a href={`/radar/${rel.data.slug || rel.id}`}>{rel.data.title}</a>
+                </h4>
+                <p class="rel-summary">{rel.data.summary}</p>
+                <a href={`/radar/${rel.data.slug || rel.id}`} class="rel-link mono">
+                  <span>Read Brief</span>
+                  <span>&rarr;</span>
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+  </article>
+</BaseLayout>
+
+<script is:inline>
+  document.addEventListener('DOMContentLoaded', () => {
+    const copyBtn = document.getElementById('copyShareBtn');
+    const copyText = document.getElementById('copyBtnText');
+
+    if (copyBtn && copyText) {
+      copyBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          const original = copyText.innerText;
+          copyText.innerText = 'Link Copied!';
+          setTimeout(() => {
+            copyText.innerText = original;
+          }, 2000);
+        } catch (e) {
+          // fallback
+        }
+      });
+    }
+  });
+</script>
+
+<style>
+  .dispatch-article {
+    background: var(--paper);
+  }
+
+  .article-header {
+    background: var(--paper-card);
+    border-bottom: 1px solid var(--paper-line);
+    padding: 40px 0 36px;
+  }
+
+  .back-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    margin-bottom: 18px;
+  }
+
+  .back-link {
+    color: var(--ink-soft);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.15s ease;
+  }
+
+  .back-link:hover {
+    color: var(--ink);
+  }
+
+  .category-badge {
+    color: var(--green);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .titleblock-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+    letter-spacing: 0.03em;
+  }
+
+  .sep {
+    color: var(--paper-line);
+  }
+
+  .article-title {
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin-bottom: 16px;
+    max-width: 880px;
+  }
+
+  .article-summary {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 820px;
+    margin-bottom: 24px;
+  }
+
+  .specs-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-top: 18px;
+    border-top: 1px solid var(--paper-line);
+  }
+
+  .specs-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    letter-spacing: 0.05em;
+  }
+
+  .spec-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .spec-chip {
+    font-size: 11.5px;
+    padding: 3px 8px;
+    background: var(--paper);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    color: var(--ink);
+  }
+
+  /* Two-column Layout */
+  .article-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 56px;
+    padding-top: 48px;
+    padding-bottom: 72px;
+  }
+
+  /* Markdown Prose Styling */
+  .radar-prose {
+    font-size: 16px;
+    line-height: 1.75;
+    color: var(--ink);
+    max-width: 760px;
+  }
+
+  .radar-prose :global(h2) {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin-top: 40px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--paper-line);
+  }
+
+  .radar-prose :global(h3) {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-top: 28px;
+    margin-bottom: 12px;
+  }
+
+  .radar-prose :global(p) {
+    margin-bottom: 20px;
+    color: #243542;
+  }
+
+  .radar-prose :global(ul),
+  .radar-prose :global(ol) {
+    margin-bottom: 24px;
+    padding-left: 24px;
+  }
+
+  .radar-prose :global(li) {
+    margin-bottom: 8px;
+    line-height: 1.65;
+  }
+
+  .radar-prose :global(strong) {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .radar-prose :global(a) {
+    color: var(--green);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .radar-prose :global(a:hover) {
+    color: #185a3c;
+  }
+
+  .radar-prose :global(blockquote) {
+    margin: 24px 0;
+    padding: 16px 20px;
+    background: var(--paper-card);
+    border-left: 3px solid var(--green);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  .radar-prose :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 28px 0;
+    font-size: 14px;
+    background: var(--paper);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .radar-prose :global(th) {
+    background: var(--paper-card);
+    text-align: left;
+    padding: 12px 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    border-bottom: 1.5px solid var(--paper-line);
+    color: var(--ink);
+  }
+
+  .radar-prose :global(td) {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--paper-line);
+    vertical-align: top;
+  }
+
+  .radar-prose :global(tr:last-child td) {
+    border-bottom: none;
+  }
+
+  .radar-prose :global(hr) {
+    border: none;
+    border-top: 1px solid var(--paper-line);
+    margin: 36px 0;
+  }
+
+  /* In-Article CTA */
+  .in-article-cta {
+    margin-top: 48px;
+    background: var(--paper-card);
+    border: 1.5px solid var(--ink);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .cta-banner-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 8px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  .cta-banner-body {
+    padding: 24px;
+  }
+
+  .cta-banner-body h3 {
+    font-size: 19px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+
+  .cta-banner-body p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    margin-bottom: 18px;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--green);
+    color: #ffffff;
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: background 0.15s ease;
+  }
+
+  .btn-primary:hover {
+    background: #185a3c;
+    color: #ffffff;
+  }
+
+  /* Sticky Sidebar */
+  .article-sidebar {
+    position: relative;
+  }
+
+  .sidebar-inner {
+    position: sticky;
+    top: 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .toc-card {
+    background: var(--paper-card);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    padding: 18px 16px;
+  }
+
+  .toc-header {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--paper-line);
+  }
+
+  .toc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .toc-item {
+    font-size: 12.5px;
+    line-height: 1.4;
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  .toc-item:hover {
+    color: var(--green);
+  }
+
+  .toc-item.depth-3 {
+    padding-left: 10px;
+    font-size: 12px;
+  }
+
+  .sidebar-cta-card {
+    background: var(--paper);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    padding: 18px 16px;
+  }
+
+  .card-tag {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--green);
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+
+  .sidebar-cta-card h4 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--ink);
+  }
+
+  .sidebar-cta-card p {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+  }
+
+  .sidebar-cta-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+    transition: color 0.15s ease, gap 0.15s ease;
+  }
+
+  .sidebar-cta-link:hover {
+    color: var(--green);
+    gap: 8px;
+  }
+
+  .share-card {
+    background: transparent;
+  }
+
+  .copy-link-btn {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 500;
+    padding: 8px 12px;
+    background: var(--paper-card);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    color: var(--ink);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .copy-link-btn:hover {
+    border-color: var(--ink);
+  }
+
+  /* Related Section */
+  .related-dispatches {
+    background: var(--paper-card);
+    border-top: 1px solid var(--paper-line);
+    padding: 48px 0 64px;
+  }
+
+  .related-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  .related-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .all-link {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--green);
+    text-decoration: none;
+  }
+
+  .related-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .related-card {
+    background: var(--paper);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .rel-meta {
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+
+  .rel-cat {
+    color: var(--green);
+    font-weight: 600;
+  }
+
+  .rel-title {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 8px;
+  }
+
+  .rel-title a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .rel-title a:hover {
+    color: var(--green);
+  }
+
+  .rel-summary {
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    margin-bottom: 16px;
+  }
+
+  .rel-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+    margin-top: auto;
+  }
+
+  .rel-link:hover {
+    color: var(--green);
+  }
+
+  @media (max-width: 900px) {
+    .article-layout {
+      grid-template-columns: 1fr;
+      gap: 36px;
+    }
+    .sidebar-inner {
+      position: static;
+    }
+    .article-title {
+      font-size: 28px;
+    }
+    .related-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

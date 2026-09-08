@@ -29,10 +29,11 @@ const { activePath = "" } = Astro.props;
 
     <nav class="nav-links" aria-label="Main Navigation">
       <a href="/search" class={activePath.startsWith("/search") ? "active" : ""}>Directory</a>
-      <a href="/search" class="cat-link">Categories</a>
+      <a href="/radar" class={activePath.startsWith("/radar") ? "active" : ""}>Radar</a>
       <a href="/for-suppliers" class={activePath === "/for-suppliers" ? "active" : ""}>For suppliers</a>
       <a href="/account" class={activePath.startsWith("/account") ? "active" : ""}>Account</a>
     </nav>
+
 
     <div class="header-actions">
       <a href="/for-suppliers" class="btn btn-dark nav-cta">List your company &rarr;</a>
