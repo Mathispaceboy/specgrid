@@ -294,6 +294,12 @@ h1, h2, h3, h4, h5, h6, .display {
   border: 1px solid rgba(31, 111, 74, 0.25);
 }
 
+.badge-claimed {
+  background: rgba(20, 36, 46, 0.08);
+  color: var(--ink);
+  border: 1px solid var(--border-color);
+}
+
 .badge-founding {
   background: var(--amber-soft);
   color: var(--amber-deep);

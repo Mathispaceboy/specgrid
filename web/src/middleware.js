@@ -35,6 +35,8 @@ function isMigrated(pathname) {
   if (p.startsWith('/claim/')) return true;
   // Phase 6: Account Edit
   if (p.startsWith('/account/edit/')) return true;
+  // P9C: Embeddable Badges
+  if (p.startsWith('/badge/')) return true;
   return false;
 }
 

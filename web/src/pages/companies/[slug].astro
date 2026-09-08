@@ -43,19 +43,19 @@ try {
 const loc = co ? [co.location && co.location.city, co.location && co.location.state].filter(Boolean).join(", ") : "";
 const certs = co ? (co.certifications || []) : [];
 
-// Verification badge and text logic matching legacyWorker.js
-const isManuallyVerified = co?.verificationTier === "manual_reviewed";
+// Verification badge and text logic matching D1 schema (draft, claimed, verified, founding)
 const isFounding = co?.status === "founding";
-const isClaimed = co?.status === "claimed";
-const isDraft = !isFounding && !isClaimed;
+const isVerified = co?.status === "verified" || co?.verificationTier === "manual_reviewed";
+const isClaimed = (co?.status === "claimed" || isVerified) && !isFounding;
+const isDraft = !isFounding && !isVerified && co?.status !== "claimed";
 
 const publicStatusLabel = isFounding
   ? "Founding member"
-  : (isClaimed ? (isManuallyVerified ? "Verified" : "Claimed") : "Draft profile");
+  : (isVerified ? "Verified" : (isClaimed ? "Claimed" : "Draft profile"));
 
 const publicBadgeCls = isFounding
   ? "badge-founding"
-  : (isClaimed ? "badge-verified" : "badge-draft");
+  : (isVerified ? "badge-verified" : (isClaimed ? "badge-claimed" : "badge-draft"));
 
 const waNumber = co?.whatsappNumber ? co.whatsappNumber.replace(/[^\d]/g, "") : "";
 const waHref = waNumber
@@ -119,12 +119,12 @@ const orgJsonLd = co ? {
                 &ldquo;Founding member&rdquo; means this company claimed early and was manually reviewed by SpecGrid (LinkedIn presence, company website, and GSTIN/CIN format checked) &mdash; see the <a href="/data-disclaimer">data disclaimer</a> for details.
               </p>
             )}
-            {isClaimed && isManuallyVerified && (
+            {isVerified && (
               <p class="verification-explainer">
                 &ldquo;Verified&rdquo; means SpecGrid manually reviewed this company &mdash; checked its LinkedIn presence, its own website, and the format of its GSTIN/CIN. This is not a live government database check &mdash; see the <a href="/data-disclaimer">data disclaimer</a> for what &ldquo;verified&rdquo; does and doesn't mean.
               </p>
             )}
-            {isClaimed && !isManuallyVerified && (
+            {isClaimed && !isVerified && (
               <p class="verification-explainer">
                 &ldquo;Claimed&rdquo; means this company's work email matched their own listed website domain &mdash; it has not yet been manually reviewed. See the <a href="/data-disclaimer">data disclaimer</a> for details.
               </p>
@@ -204,10 +204,51 @@ const orgJsonLd = co ? {
           </div>
         </section>
 
+        <!-- P9C: Embeddable Profile Badge -->
+        <section class="profile-section badge-embed-section">
+          <div class="section-label mono">04 // Verification Embed &middot; P9C</div>
+          <h2>Proof of Listing</h2>
+          <p class="enquire-note">
+            Feature this official SpecGrid catalog specification on your company website, documentation, or email signature.
+          </p>
+
+          <div class="badge-embed-container">
+            <div class="badge-preview-box">
+              <img
+                src={`/badge/${slug}.svg`}
+                alt={`${co.name} SpecGrid Badge`}
+                width="320"
+                height="64"
+                class="badge-svg-img"
+              />
+            </div>
+
+            <div class="badge-code-box">
+              <label class="mono badge-code-label">HTML Embed Snippet</label>
+              <div class="code-copy-row">
+                <input
+                  type="text"
+                  readonly
+                  value={`<a href="https://specgrid.in/companies/${slug}" target="_blank" rel="noopener"><img src="https://specgrid.in/badge/${slug}.svg" alt="${co.name} on SpecGrid" width="320" height="64" /></a>`}
+                  class="badge-code-input mono"
+                  id="badgeEmbedCode"
+                />
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-copy"
+                  onclick="navigator.clipboard.writeText(document.getElementById('badgeEmbedCode').value); this.textContent = 'Copied!'; setTimeout(() => this.textContent = 'Copy', 2000);"
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- Similar Suppliers Recommendation -->
         {similar.length > 0 && (
           <section class="profile-section">
-            <div class="section-label mono">04 // Peer Cluster</div>
+            <div class="section-label mono">05 // Peer Cluster</div>
             <h2>Similar suppliers</h2>
             <div class="similar-grid">
               {similar.map((s: any) => {
@@ -448,6 +489,70 @@ const orgJsonLd = co ? {
   .wa-btn:hover {
     background: #1EBE5B;
     color: #fff;
+  }
+
+  /* P9C: Badge Embed Styles */
+  .badge-embed-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: var(--paper-warm);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-top: 14px;
+  }
+
+  .badge-preview-box {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .badge-svg-img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+  }
+
+  .badge-code-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .badge-code-label {
+    font-size: 11px;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .code-copy-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .badge-code-input {
+    flex: 1;
+    font-size: 12px;
+    padding: 9px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    color: var(--ink);
+    outline: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .btn-copy {
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
   }
 
   /* Similar Suppliers */
