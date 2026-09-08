@@ -1,0 +1,568 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "SpecGrid",
+  "url": "https://specgrid.in/",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://specgrid.in/search?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+};
+
+const popularChips = [
+  { label: "Switchgear & Panels", href: "/search?category=switchgear-panels" },
+  { label: "Transformers", href: "/search?category=transformers" },
+  { label: "Solar & Storage", href: "/search?category=solar-storage" },
+  { label: "EV & Charging", href: "/search?category=ev-charging" },
+  { label: "Tamil Nadu", href: "/search?state=Tamil%20Nadu" },
+];
+
+const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
+---
+
+<BaseLayout
+  title="SpecGrid — India's Technical Manufacturer Directory"
+  description="Search India's technical manufacturers by product, voltage class, IP rating, and certification. Real specs, not just names and phone numbers."
+  canonicalPath="/"
+  jsonLd={websiteJsonLd}
+>
+  <div class="homepage">
+    <!-- Hero Section -->
+    <section class="home-hero">
+      <div class="wrap">
+        <div class="titleblock" style="margin-bottom: 28px;">
+          <div>Directory<strong>Capability Index // India</strong></div>
+          <div>Cluster<strong>Industrial Electrical &amp; Power</strong></div>
+          <div>Filter Engine<strong>Voltage &middot; IP &middot; Standard</strong></div>
+          <div>Index<strong>Direct Sourcing</strong></div>
+        </div>
+
+        <div class="tag" style="margin-bottom: 16px;">
+          <span class="dot"></span>
+          <span>India's Technical Manufacturer Directory</span>
+        </div>
+
+        <h1 class="hero-title">Find who actually makes it.</h1>
+        <p class="hero-lead">
+          Search by product, voltage class, IP rating or certification &mdash; and get real manufacturers, not ten identical-looking listing cards.
+        </p>
+
+        <!-- Search Form -->
+        <form class="search-form" action="/search" method="get">
+          <div class="search-input-wrap">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="7"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input
+              name="q"
+              type="text"
+              autocomplete="off"
+              placeholder='Try "36kV VCB Coimbatore" or "IP65 solar inverter, ISO certified"'
+              class="search-input"
+            />
+            <button type="submit" class="btn btn-primary search-btn" aria-label="Search">
+              <span>Search</span> &rarr;
+            </button>
+          </div>
+        </form>
+
+        <!-- Category / Location Chips -->
+        <div class="chips-row">
+          <span class="chips-label mono">Quick Index:</span>
+          {popularChips.map(chip => (
+            <a href={chip.href} class="chip-item">
+              <span class="chip-dot"></span>
+              <span>{chip.label}</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- Trust / Verification Metrics Bar -->
+    <section class="trust-bar">
+      <div class="wrap">
+        <div class="trust-grid">
+          <div class="trust-item">
+            <div class="trust-check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M20 6L9 17l-5-5"/>
+              </svg>
+            </div>
+            <div>
+              <span class="trust-val mono" id="statCompanies">&hellip;</span>
+              <span class="trust-text">manufacturers indexed</span>
+            </div>
+          </div>
+
+          <div class="trust-item">
+            <div class="trust-check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M20 6L9 17l-5-5"/>
+              </svg>
+            </div>
+            <div class="trust-text">
+              Filterable by <strong>voltage &middot; IP rating &middot; certification</strong>
+            </div>
+          </div>
+
+          <div class="trust-item">
+            <div class="trust-check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M20 6L9 17l-5-5"/>
+              </svg>
+            </div>
+            <div class="trust-text">
+              No lead reselling &mdash; <strong>enquiries go direct</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Browse Categories Section -->
+    <section class="categories-sec">
+      <div class="wrap">
+        <div class="sec-top">
+          <div>
+            <div class="divider" style="margin-bottom: 8px;">Direct Taxonomy</div>
+            <h2>Browse by category</h2>
+          </div>
+          <a href="/search" class="see-all-link mono">See all categories &rarr;</a>
+        </div>
+
+        <div id="tileGrid" class="categories-grid">
+          <div class="cat-tile skel"></div>
+          <div class="cat-tile skel"></div>
+          <div class="cat-tile skel"></div>
+          <div class="cat-tile skel"></div>
+          <div class="cat-tile skel"></div>
+          <div class="cat-tile skel"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Proof / Spec Showcase Section -->
+    <section class="proof-sec">
+      <div class="wrap">
+        <div class="divider">Verified Format</div>
+        <div class="proof-card">
+          <div class="proof-info">
+            <div class="tag" style="margin-bottom: 12px;">
+              <span class="dot"></span>
+              <span>What a real profile looks like</span>
+            </div>
+            <h3>Sky Power Switchgears &mdash; Salem, Tamil Nadu</h3>
+            <p>
+              Compiled from the company's own public catalog. Buyers see exact specs before they ever pick up the phone.
+            </p>
+            <div style="margin-top: 18px;">
+              <a href="/companies/sky-power-switchgears" class="btn btn-dark">View full profile &rarr;</a>
+            </div>
+          </div>
+
+          <div class="spec-sheet-preview">
+            <div class="spec-preview-header">
+              <span class="mono" style="font-size: 11px; color: var(--ink-faint);">SPEC-0108 // CAPABILITY</span>
+              <span class="badge badge-founding">Founding Member</span>
+            </div>
+            <div class="spec-list" style="margin-top: 12px;">
+              <div class="spec-row">
+                <span class="k">Panel type</span>
+                <span class="v">AIS, VCB, RMU</span>
+              </div>
+              <div class="spec-row">
+                <span class="k">Voltage</span>
+                <span class="v">up to 36 kV</span>
+              </div>
+              <div class="spec-row">
+                <span class="k">Testing</span>
+                <span class="v">IEC type-tested</span>
+              </div>
+              <div class="spec-row">
+                <span class="k">Enclosure</span>
+                <span class="v">IP54 / IP65</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<script is:inline define:vars={{ API_BASE }}>
+  // Dynamic category and company count loader
+  (async () => {
+    try {
+      const [cr, pr] = await Promise.all([
+        fetch(API_BASE + "/api/categories").then(r => r.json()),
+        fetch(API_BASE + "/api/companies?limit=1").then(r => r.json())
+      ]);
+
+      const cats = cr.results || [];
+      const statEl = document.getElementById("statCompanies");
+      if (statEl) {
+        statEl.textContent = (pr.total !== undefined) ? pr.total : "—";
+      }
+
+      const gridEl = document.getElementById("tileGrid");
+      if (gridEl) {
+        gridEl.innerHTML = "";
+        cats.slice(0, 10).forEach(c => {
+          const a = document.createElement("a");
+          a.className = "cat-tile";
+          a.href = "/search?category=" + encodeURIComponent(c.slug);
+          
+          const safeName = (c.name || "").replace(/</g, "&lt;");
+          a.innerHTML = 
+            '<div class="cat-tile-top">' +
+              '<span class="cat-tag mono">CAT</span>' +
+              '<span class="cat-arrow mono">&rarr;</span>' +
+            '</div>' +
+            '<div class="cat-name">' + safeName + '</div>' +
+            '<div class="cat-action mono">Browse category &rarr;</div>';
+          gridEl.appendChild(a);
+        });
+      }
+    } catch(e) {
+      const gridEl = document.getElementById("tileGrid");
+      if (gridEl) {
+        gridEl.innerHTML = '<div style="grid-column:1/-1;color:var(--ink-soft);font-size:13.5px;padding:16px 0;">Categories are temporarily unavailable.</div>';
+      }
+    }
+  })();
+</script>
+
+<style>
+  .homepage {
+    padding-bottom: 56px;
+  }
+
+  /* Hero */
+  .home-hero {
+    padding: 64px 0 44px;
+    border-bottom: 1px solid var(--paper-line);
+  }
+
+  .hero-title {
+    font-size: clamp(36px, 5.4vw, 56px);
+    line-height: 1.05;
+    max-width: 800px;
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+  }
+
+  .hero-lead {
+    font-size: 18px;
+    color: var(--ink-soft);
+    max-width: 620px;
+    line-height: 1.6;
+    margin-bottom: 32px;
+  }
+
+  /* Search Form */
+  .search-form {
+    max-width: 720px;
+    margin-bottom: 24px;
+  }
+
+  .search-input-wrap {
+    display: flex;
+    align-items: center;
+    background: var(--card);
+    border: 1.5px solid var(--ink);
+    border-radius: var(--radius);
+    padding: 4px 6px 4px 16px;
+    box-shadow: 0 2px 6px rgba(20, 36, 46, 0.05);
+  }
+
+  .search-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--ink-soft);
+    flex-shrink: 0;
+    margin-right: 12px;
+  }
+
+  .search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 16px;
+    color: var(--ink);
+    padding: 12px 0;
+    min-width: 0;
+  }
+
+  .search-input::placeholder {
+    color: var(--ink-faint);
+    font-size: 14.5px;
+  }
+
+  .search-btn {
+    padding: 12px 20px;
+    flex-shrink: 0;
+    font-size: 13.5px;
+  }
+
+  /* Chips */
+  .chips-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+
+  .chips-label {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-right: 4px;
+  }
+
+  .chip-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    padding: 5px 12px;
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    border-radius: var(--radius);
+    color: var(--ink-soft);
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .chip-item:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  .chip-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--green);
+  }
+
+  /* Trust Metrics Bar */
+  .trust-bar {
+    padding: 24px 0;
+    border-bottom: 1px solid var(--paper-line);
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  .trust-grid {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+  }
+
+  .trust-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--green-soft);
+    color: var(--green-deep);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .trust-check svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .trust-val {
+    font-weight: 700;
+    color: var(--ink);
+    font-size: 15px;
+    margin-right: 4px;
+  }
+
+  .trust-text strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* Categories Section */
+  .categories-sec {
+    padding: 48px 0;
+    border-bottom: 1px solid var(--paper-line);
+  }
+
+  .sec-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .sec-top h2 {
+    font-size: 24px;
+    letter-spacing: -0.01em;
+  }
+
+  .see-all-link {
+    font-size: 12.5px;
+    color: var(--green-deep);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  .see-all-link:hover {
+    text-decoration: underline;
+  }
+
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+  }
+
+  :global(.cat-tile) {
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 110px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  :global(.cat-tile:hover) {
+    border-color: var(--ink);
+    box-shadow: 0 2px 5px rgba(20, 36, 46, 0.05);
+  }
+
+  :global(.cat-tile-top) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  :global(.cat-tag) {
+    font-size: 9.5px;
+    background: var(--paper);
+    padding: 2px 5px;
+    border-radius: var(--radius);
+    color: var(--ink-faint);
+    letter-spacing: 0.05em;
+  }
+
+  :global(.cat-arrow) {
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+
+  :global(.cat-name) {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 4px 0;
+  }
+
+  :global(.cat-action) {
+    font-size: 11.5px;
+    color: var(--green-deep);
+    font-weight: 500;
+  }
+
+  .cat-tile.skel {
+    height: 110px;
+    border: none;
+  }
+
+  /* Proof Section */
+  .proof-sec {
+    padding: 48px 0;
+  }
+
+  .proof-card {
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 32px;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 36px;
+    align-items: center;
+  }
+
+  .proof-info h3 {
+    font-size: 22px;
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+  }
+
+  .proof-info p {
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    max-width: 480px;
+  }
+
+  .spec-sheet-preview {
+    border: 1px solid var(--paper-line);
+    background: var(--paper);
+    padding: 20px 24px;
+    border-radius: var(--radius);
+  }
+
+  .spec-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--paper-line);
+    padding-bottom: 10px;
+  }
+
+  @media (max-width: 820px) {
+    .proof-card {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .search-input-wrap {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 10px 12px;
+      gap: 8px;
+    }
+    .search-icon {
+      display: none;
+    }
+    .search-btn {
+      width: 100%;
+    }
+  }
+</style>

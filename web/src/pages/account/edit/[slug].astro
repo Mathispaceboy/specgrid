@@ -1,0 +1,584 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+
+const { slug } = Astro.params;
+
+if (!slug) {
+  return new Response("Not found", { status: 404 });
+}
+
+const CLERK_PUBLISHABLE_KEY = "pk_test_YnVzeS1jcmlja2V0LTExMzMuY2xlcmsuYWNjb3VudHMuZGV2JA";
+const CLERK_FRONTEND_API = "https://busy-cricket-1133.clerk.accounts.dev";
+const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
+---
+
+<BaseLayout
+  title="Edit profile — SpecGrid"
+  description="Edit your claimed SpecGrid company profile."
+  canonicalPath={`/account/edit/${slug}`}
+>
+  <div class="edit-page wrap">
+    <div class="edit-nav">
+      <a href="/account" class="back-link mono">&larr; Back to account</a>
+    </div>
+
+    <div class="titleblock" style="margin-bottom: 24px;">
+      <div>Editor<strong>Profile &amp; Specification Control</strong></div>
+      <div>Slug<strong>{slug}</strong></div>
+      <div>Live Updates<strong>Public Catalog Sync</strong></div>
+      <div>Security<strong>Clerk Token Auth</strong></div>
+    </div>
+
+    <div id="clerkGate" class="auth-gate-box mono">Checking authorization&hellip;</div>
+    <div id="editRoot" class="edit-root" style="display: none;"></div>
+  </div>
+</BaseLayout>
+
+<script is:inline define:vars={{ slug, CLERK_PUBLISHABLE_KEY, CLERK_FRONTEND_API, API_BASE }}>
+  (function(){
+    function esc(s){
+      return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+        return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+      });
+    }
+
+    var s = document.createElement("script");
+    s.setAttribute("data-clerk-publishable-key", CLERK_PUBLISHABLE_KEY);
+    s.src = CLERK_FRONTEND_API + "/npm/@clerk/clerk-js@5/dist/clerk.browser.js";
+    s.async = true;
+    s.crossOrigin = "anonymous";
+
+    s.addEventListener("load", async function(){
+      try {
+        await window.Clerk.load();
+        var gate = document.getElementById("clerkGate");
+        var root = document.getElementById("editRoot");
+
+        if (!window.Clerk.user) {
+          if (gate) {
+            gate.innerHTML = 'You need to be signed in to edit this profile. <a href="/account" class="doc-link">Sign in &rarr;</a>';
+          }
+          return;
+        }
+
+        if (gate) gate.style.display = "none";
+        if (root) root.style.display = "flex";
+
+        try {
+          var e = window.Clerk.user.primaryEmailAddress;
+          if (e && window.__sg) window.__sg.identify(e.emailAddress);
+        } catch(err) {}
+
+        loadForm();
+      } catch(err) {
+        var gate = document.getElementById("clerkGate");
+        if (gate) gate.textContent = "Could not load session. Please refresh.";
+      }
+    });
+
+    s.addEventListener("error", function(){
+      var gate = document.getElementById("clerkGate");
+      if (gate) gate.textContent = "Could not load session. Please refresh.";
+    });
+
+    document.head.appendChild(s);
+
+    async function authedFetch(path, opts){
+      var token = await window.Clerk.session.getToken();
+      opts = opts || {};
+      opts.headers = Object.assign({}, opts.headers, { Authorization: "Bearer " + token });
+      return fetch(API_BASE + path, opts);
+    }
+
+    async function loadForm(){
+      var root = document.getElementById("editRoot");
+      if (!root) return;
+      root.innerHTML = '<p class="mono loading-text">Loading company profile&hellip;</p>';
+
+      var res, co;
+      try {
+        res = await authedFetch("/api/my-company/" + encodeURIComponent(slug));
+        co = await res.json();
+      } catch(e) {
+        root.innerHTML = '<div class="alert-box err mono">Could not load profile &mdash; please refresh.</div>';
+        return;
+      }
+
+      if (!res.ok) {
+        root.innerHTML = '<div class="alert-box err mono">' + esc(co.error || "Could not load your profile.") + '</div>';
+        return;
+      }
+
+      root.innerHTML =
+        '<div class="edit-card">' +
+          '<div class="tag" style="margin-bottom: 12px;"><span class="dot"></span><span>Specification Data</span></div>' +
+          '<h1 class="card-title">Edit ' + esc(co.name) + '</h1>' +
+          '<p class="card-sub">Changes save directly to your public catalog profile.</p>' +
+          '<form id="editForm" class="editor-form">' +
+            '<div class="fld">' +
+              '<label for="f_description" class="fld-label mono">Company Capability &amp; Description</label>' +
+              '<textarea id="f_description" rows="4" class="fld-textarea">' + esc(co.description || "") + '</textarea>' +
+            '</div>' +
+            '<div class="fld-grid">' +
+              '<div class="fld">' +
+                '<label for="f_website" class="fld-label mono">Official Website</label>' +
+                '<input id="f_website" class="fld-input" value="' + esc(co.website || "") + '" />' +
+              '</div>' +
+              '<div class="fld">' +
+                '<label for="f_founded" class="fld-label mono">Founded Year</label>' +
+                '<input id="f_founded" class="fld-input" value="' + esc(co.foundedYear || "") + '" />' +
+              '</div>' +
+            '</div>' +
+            '<div class="fld-grid">' +
+              '<div class="fld">' +
+                '<label for="f_city" class="fld-label mono">City</label>' +
+                '<input id="f_city" class="fld-input" value="' + esc((co.location && co.location.city) || "") + '" />' +
+              '</div>' +
+              '<div class="fld">' +
+                '<label for="f_state" class="fld-label mono">State</label>' +
+                '<input id="f_state" class="fld-input" value="' + esc((co.location && co.location.state) || "") + '" />' +
+              '</div>' +
+            '</div>' +
+            '<div class="fld">' +
+              '<label for="f_whatsapp" class="fld-label mono">WhatsApp Direct Number</label>' +
+              '<input id="f_whatsapp" class="fld-input" value="' + esc(co.whatsappNumber || "") + '" placeholder="e.g. 919876543210" />' +
+              '<div class="fld-hint mono">Include country code without +, digits only. Leave blank to hide the WhatsApp direct button.</div>' +
+            '</div>' +
+            '<div class="form-actions">' +
+              '<button class="btn btn-primary" type="submit">Save changes &rarr;</button>' +
+            '</div>' +
+            '<div id="editMsg" class="form-msg"></div>' +
+          '</form>' +
+        '</div>' +
+
+        '<div class="edit-card" id="intentBox">' +
+          '<div class="tag" style="margin-bottom: 12px;"><span class="dot" style="background: var(--amber);"></span><span>Market Telemetry</span></div>' +
+          '<h2 class="card-title" style="font-size: 19px;">Buyer Intent &mdash; Your Category</h2>' +
+          '<div id="intentBody" class="card-sub mono">Loading live search signals&hellip;</div>' +
+        '</div>' +
+
+        '<div class="edit-card">' +
+          '<div class="tag" style="margin-bottom: 12px;"><span class="dot"></span><span>Quality &amp; Standards</span></div>' +
+          '<h2 class="card-title" style="font-size: 19px;">Certifications</h2>' +
+          '<div id="certList" style="margin-bottom: 20px;"></div>' +
+          '<form id="certForm" class="cert-add-form">' +
+            '<div class="fld-grid">' +
+              '<div class="fld">' +
+                '<label for="c_name" class="fld-label mono">Certification Name <span class="req">*</span></label>' +
+                '<input id="c_name" required class="fld-input" placeholder="e.g. ISO 9001:2015, IEC 62271" />' +
+              '</div>' +
+              '<div class="fld">' +
+                '<label for="c_body" class="fld-label mono">Issuing Body</label>' +
+                '<input id="c_body" class="fld-input" placeholder="e.g. TUV, BIS, CPRI" />' +
+              '</div>' +
+            '</div>' +
+            '<div class="form-actions" style="margin-top: 10px;">' +
+              '<button class="btn btn-dark btn-sm" type="submit">+ Add certification</button>' +
+            '</div>' +
+            '<div id="certMsg" class="form-msg"></div>' +
+          '</form>' +
+        '</div>';
+
+      renderCerts(co.certifications || []);
+      loadBuyerIntent();
+
+      // Form submission for profile changes
+      document.getElementById("editForm").addEventListener("submit", async function(e){
+        e.preventDefault();
+        var btn = e.target.querySelector("button[type='submit']");
+        var msg = document.getElementById("editMsg");
+        btn.disabled = true;
+        btn.textContent = "Saving…";
+        msg.className = "form-msg";
+
+        var payload = {
+          description: document.getElementById("f_description").value,
+          website: document.getElementById("f_website").value,
+          locationCity: document.getElementById("f_city").value,
+          locationState: document.getElementById("f_state").value,
+          foundedYear: document.getElementById("f_founded").value,
+          whatsappNumber: document.getElementById("f_whatsapp").value.replace(/[^\d]/g, ""),
+        };
+
+        try {
+          var r = await authedFetch("/api/my-company/" + encodeURIComponent(slug), {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          var data = await r.json();
+          if (!r.ok) {
+            msg.className = "form-msg err";
+            msg.textContent = data.error || "Something went wrong.";
+            btn.disabled = false;
+            btn.textContent = "Save changes →";
+            return;
+          }
+          msg.className = "form-msg ok";
+          msg.textContent = "Saved. Your public profile has been updated.";
+          btn.disabled = false;
+          btn.textContent = "Save changes →";
+        } catch(err) {
+          msg.className = "form-msg err";
+          msg.textContent = "Network error — please check connection.";
+          btn.disabled = false;
+          btn.textContent = "Save changes →";
+        }
+      });
+
+      // Form submission for adding certifications
+      document.getElementById("certForm").addEventListener("submit", async function(e){
+        e.preventDefault();
+        var btn = e.target.querySelector("button[type='submit']");
+        var msg = document.getElementById("certMsg");
+        btn.disabled = true;
+        btn.textContent = "Adding…";
+        msg.className = "form-msg";
+
+        try {
+          var r = await authedFetch("/api/my-company/" + encodeURIComponent(slug) + "/certifications", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: document.getElementById("c_name").value,
+              issuingBody: document.getElementById("c_body").value || null
+            })
+          });
+          var data = await r.json();
+          if (!r.ok) {
+            msg.className = "form-msg err";
+            msg.textContent = data.error || "Something went wrong.";
+            btn.disabled = false;
+            btn.textContent = "+ Add certification";
+            return;
+          }
+          document.getElementById("c_name").value = "";
+          document.getElementById("c_body").value = "";
+          msg.className = "form-msg ok";
+          msg.textContent = "Certification added.";
+          btn.disabled = false;
+          btn.textContent = "+ Add certification";
+
+          var fresh = await (await authedFetch("/api/my-company/" + encodeURIComponent(slug))).json();
+          renderCerts(fresh.certifications || []);
+        } catch(err) {
+          msg.className = "form-msg err";
+          msg.textContent = "Network error — please try again.";
+          btn.disabled = false;
+          btn.textContent = "+ Add certification";
+        }
+      });
+    }
+
+    async function loadBuyerIntent(){
+      var el = document.getElementById("intentBody");
+      if (!el) return;
+
+      try {
+        var r = await authedFetch("/api/my-company/" + encodeURIComponent(slug) + "/buyer-intent");
+        var d = await r.json();
+        if (!r.ok) {
+          el.textContent = d.error || "Could not load buyer intent telemetry.";
+          return;
+        }
+
+        if (!d.hasEnoughData) {
+          el.textContent = "Not enough search activity yet on SpecGrid to show real numbers for your category — check back as traffic grows. This panel updates automatically.";
+          return;
+        }
+
+        var html =
+          '<div class="intent-metrics-row">' +
+            '<div class="intent-stat-card">' +
+              '<div class="intent-val mono">' + d.profileViews + '</div>' +
+              '<div class="intent-lbl mono">Profile views &middot; last ' + d.days + ' days</div>' +
+            '</div>' +
+            '<div class="intent-stat-card">' +
+              '<div class="intent-val mono">' + d.categorySearches + '</div>' +
+              '<div class="intent-lbl mono">Searches in your category &middot; last ' + d.days + ' days</div>' +
+            '</div>' +
+          '</div>';
+
+        if (d.topQueriesInCategory && d.topQueriesInCategory.length) {
+          html +=
+            '<div class="intent-queries-list mono">' +
+              '<span style="color: var(--ink);">Top search terms: </span>' +
+              d.topQueriesInCategory.map(function(q){
+                return esc(q.query) + ' (' + q.count + '&times;)';
+              }).join(", ") +
+            '</div>';
+        }
+        el.innerHTML = html;
+      } catch(e) {
+        el.textContent = "Could not load buyer intent data — please refresh.";
+      }
+    }
+
+    function renderCerts(certs){
+      var el = document.getElementById("certList");
+      if (!el) return;
+      if (!certs.length) {
+        el.innerHTML = '<p class="mono" style="color: var(--ink-soft); font-size: 13px;">No certifications recorded yet.</p>';
+        return;
+      }
+
+      el.innerHTML =
+        '<div class="certs-stack">' +
+        certs.map(function(c){
+          return (
+            '<div class="cert-row">' +
+              '<div>' +
+                '<span class="cert-title">' + esc(c.name) + '</span>' +
+                (c.issuingBody ? ' <span class="cert-sub">&mdash; ' + esc(c.issuingBody) + '</span>' : '') +
+                (c.verified ? ' <span class="badge badge-verified mono" style="margin-left: 8px;">VERIFIED</span>' : '') +
+              '</div>' +
+              '<button data-id="' + esc(c.id) + '" class="certDelBtn mono">Remove &times;</button>' +
+            '</div>'
+          );
+        }).join("") +
+        '</div>';
+
+      el.querySelectorAll(".certDelBtn").forEach(function(btn){
+        btn.addEventListener("click", async function(){
+          btn.disabled = true;
+          btn.textContent = "Removing…";
+          try {
+            await authedFetch("/api/my-company/" + encodeURIComponent(slug) + "/certifications/" + encodeURIComponent(btn.getAttribute("data-id")), {
+              method: "DELETE"
+            });
+            var fresh = await (await authedFetch("/api/my-company/" + encodeURIComponent(slug))).json();
+            renderCerts(fresh.certifications || []);
+          } catch(e) {
+            btn.disabled = false;
+            btn.textContent = "Remove ×";
+          }
+        });
+      });
+    }
+  })();
+</script>
+
+<style>
+  .edit-page {
+    padding: 36px 24px 72px;
+  }
+
+  .edit-nav {
+    margin-bottom: 20px;
+  }
+
+  .back-link {
+    font-size: 13px;
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  .back-link:hover {
+    color: var(--ink);
+  }
+
+  .auth-gate-box {
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    padding: 28px;
+    border-radius: var(--radius);
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 14px;
+    max-width: 540px;
+    margin: 32px auto;
+  }
+
+  .edit-root {
+    max-width: 680px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  :global(.edit-card) {
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 28px;
+    box-shadow: 0 1px 4px rgba(20, 36, 46, 0.04);
+  }
+
+  :global(.card-title) {
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+  }
+
+  :global(.card-sub) {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin-bottom: 24px;
+    line-height: 1.55;
+  }
+
+  :global(.editor-form), :global(.cert-add-form) {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  :global(.fld) {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  :global(.fld-grid) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  :global(.fld-label) {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  :global(.req) {
+    color: var(--copper);
+  }
+
+  :global(.fld-input), :global(.fld-textarea) {
+    width: 100%;
+    padding: 10px 13px;
+    font-size: 14px;
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    background: var(--paper);
+    color: var(--ink);
+    outline: none;
+    font-family: var(--font-body);
+    transition: border-color 0.15s ease;
+  }
+
+  :global(.fld-input:focus), :global(.fld-textarea:focus) {
+    border-color: var(--ink);
+    background: #fff;
+  }
+
+  :global(.fld-hint) {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  :global(.intent-metrics-row) {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  :global(.intent-stat-card) {
+    border: 1px solid var(--paper-line);
+    background: var(--paper);
+    padding: 16px 20px;
+    border-radius: var(--radius);
+    flex: 1;
+    min-width: 140px;
+  }
+
+  :global(.intent-val) {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--green-deep);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  :global(.intent-lbl) {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+  }
+
+  :global(.intent-queries-list) {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    border-top: 1px dashed var(--paper-line);
+    padding-top: 10px;
+  }
+
+  :global(.certs-stack) {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  :global(.cert-row) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: var(--paper);
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    font-size: 13.5px;
+  }
+
+  :global(.cert-title) {
+    font-weight: 600;
+  }
+
+  :global(.cert-sub) {
+    color: var(--ink-soft);
+  }
+
+  :global(.certDelBtn) {
+    background: none;
+    border: none;
+    color: var(--copper);
+    cursor: pointer;
+    font-size: 11.5px;
+    letter-spacing: 0.02em;
+    padding: 2px 6px;
+  }
+
+  :global(.certDelBtn:hover) {
+    text-decoration: underline;
+  }
+
+  :global(.form-msg) {
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    display: none;
+  }
+
+  :global(.form-msg.ok) {
+    background: var(--green-soft);
+    border: 1px solid rgba(31, 111, 74, 0.4);
+    color: var(--green-deep);
+    display: block;
+  }
+
+  :global(.form-msg.err) {
+    background: #FDF1EE;
+    border: 1px solid #E8B3A4;
+    color: #A3402A;
+    display: block;
+  }
+
+  .doc-link {
+    color: var(--green-deep);
+    text-decoration: underline;
+  }
+
+  @media (max-width: 600px) {
+    :global(.fld-grid) {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

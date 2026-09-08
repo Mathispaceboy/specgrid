@@ -1,0 +1,497 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { trackServer } from '../../utils/tracking.js';
+
+const { slug } = Astro.params;
+
+if (!slug) {
+  return new Response("Not found", { status: 404 });
+}
+
+const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
+const SITE_URL = "https://specgrid.in";
+
+// Fetch company details from API
+let co = null;
+let similar = [];
+
+try {
+  const res = await fetch(`${API_BASE}/api/companies/${encodeURIComponent(slug)}`);
+  if (!res.ok) {
+    Astro.response.status = 404;
+  } else {
+    co = await res.json();
+
+    // Server-side tracking for profile view
+    trackServer(Astro.request, "company_view", slug, null, Astro.locals);
+
+    // Fetch similar suppliers in the same category
+    if (co.category) {
+      try {
+        const simRes = await fetch(`${API_BASE}/api/companies?category=${encodeURIComponent(co.category)}&limit=6`);
+        if (simRes.ok) {
+          const simData = await simRes.json();
+          similar = (simData.results || []).filter((c: any) => c.slug !== slug).slice(0, 3);
+        }
+      } catch (e) {}
+    }
+  }
+} catch (e) {
+  Astro.response.status = 500;
+}
+
+const loc = co ? [co.location && co.location.city, co.location && co.location.state].filter(Boolean).join(", ") : "";
+const certs = co ? (co.certifications || []) : [];
+
+// Verification badge and text logic matching legacyWorker.js
+const isManuallyVerified = co?.verificationTier === "manual_reviewed";
+const isFounding = co?.status === "founding";
+const isClaimed = co?.status === "claimed";
+const isDraft = !isFounding && !isClaimed;
+
+const publicStatusLabel = isFounding
+  ? "Founding member"
+  : (isClaimed ? (isManuallyVerified ? "Verified" : "Claimed") : "Draft profile");
+
+const publicBadgeCls = isFounding
+  ? "badge-founding"
+  : (isClaimed ? "badge-verified" : "badge-draft");
+
+const waNumber = co?.whatsappNumber ? co.whatsappNumber.replace(/[^\d]/g, "") : "";
+const waHref = waNumber
+  ? `https://wa.me/${waNumber}?text=${encodeURIComponent("Hi, I found you on SpecGrid and would like to enquire about your products.")}`
+  : null;
+
+const orgJsonLd = co ? {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": co.name,
+  "url": `${SITE_URL}/companies/${slug}`,
+  "address": loc || undefined
+} : null;
+---
+
+{co ? (
+  <BaseLayout
+    title={`${co.name} — SpecGrid`}
+    description={co.description ? co.description.slice(0, 160) : `${co.name}, ${loc} — technical manufacturer profile on SpecGrid.`}
+    canonicalPath={`/companies/${slug}`}
+    ogImage={co.logoUrl || undefined}
+    jsonLd={orgJsonLd}
+  >
+    <div class="profile-page wrap">
+      <!-- Back Link -->
+      <div class="profile-nav">
+        <a href="/search" class="back-link mono">&larr; Back to search</a>
+      </div>
+
+      <!-- Draft Disclaimer Banner for unclaimed profiles -->
+      {isDraft && (
+        <div class="draft-notice-banner">
+          <div class="notice-tag mono">PUBLIC SPECIFICATION NOTICE</div>
+          <p>
+            This is a draft profile compiled from public information &mdash; not yet verified by the company. If this is your business, <a href={`/claim/${slug}`} class="notice-link">claim and correct it</a> or read our <a href="/data-disclaimer" class="notice-link">data disclaimer</a>.
+          </p>
+        </div>
+      )}
+
+      <!-- Profile Header Area -->
+      <header class="profile-header">
+        <div class="titleblock" style="margin-bottom: 20px;">
+          <div>Catalog ID<strong>{co.specId || `SPEC-${co.id.slice(0, 6).toUpperCase()}`}</strong></div>
+          <div>Status<strong>{publicStatusLabel}</strong></div>
+          <div>Location<strong>{loc || "India"}</strong></div>
+          <div>Listing<strong>Direct &middot; No Resale</strong></div>
+        </div>
+
+        <div class="profile-title-bar">
+          <div>
+            <h1 class="profile-name">{co.name}</h1>
+            <div class="profile-sub-meta mono">
+              {loc}
+              {co.foundedYear && ` · Est. ${co.foundedYear}`}
+              {co.companyType && ` · ${co.companyType.replace(/_/g, " ")}`}
+            </div>
+
+            <!-- Verification Tier Explanation -->
+            {isFounding && (
+              <p class="verification-explainer">
+                &ldquo;Founding member&rdquo; means this company claimed early and was manually reviewed by SpecGrid (LinkedIn presence, company website, and GSTIN/CIN format checked) &mdash; see the <a href="/data-disclaimer">data disclaimer</a> for details.
+              </p>
+            )}
+            {isClaimed && isManuallyVerified && (
+              <p class="verification-explainer">
+                &ldquo;Verified&rdquo; means SpecGrid manually reviewed this company &mdash; checked its LinkedIn presence, its own website, and the format of its GSTIN/CIN. This is not a live government database check &mdash; see the <a href="/data-disclaimer">data disclaimer</a> for what &ldquo;verified&rdquo; does and doesn't mean.
+              </p>
+            )}
+            {isClaimed && !isManuallyVerified && (
+              <p class="verification-explainer">
+                &ldquo;Claimed&rdquo; means this company's work email matched their own listed website domain &mdash; it has not yet been manually reviewed. See the <a href="/data-disclaimer">data disclaimer</a> for details.
+              </p>
+            )}
+          </div>
+
+          <div>
+            <span class={`badge ${publicBadgeCls}`} style="font-size: 12px; padding: 6px 12px;">
+              {publicStatusLabel}
+            </span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Profile Content Sections -->
+      <div class="profile-body">
+        <!-- About Section -->
+        {co.description && (
+          <section class="profile-section">
+            <div class="section-label mono">01 // Capability Overview</div>
+            <h2>About</h2>
+            <p class="about-text">{co.description}</p>
+          </section>
+        )}
+
+        <!-- Certifications Section -->
+        {certs.length > 0 && (
+          <section class="profile-section">
+            <div class="section-label mono">02 // Testing &amp; Standards</div>
+            <h2>Certifications</h2>
+            <div class="certs-list">
+              {certs.map((c: any) => (
+                <div class="cert-item">
+                  <div class="cert-name">
+                    <span>{c.name}</span>
+                    {c.issuingBody && <span class="cert-issuer"> &mdash; {c.issuingBody}</span>}
+                  </div>
+                  {c.verified && (
+                    <span class="badge badge-verified mono">VERIFIED</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <!-- Enquire & Direct Communication Section -->
+        <section class="profile-section enquire-action-panel">
+          <div class="section-label mono">03 // Direct Inquiries</div>
+          <h2>Enquire</h2>
+          <p class="enquire-note">
+            SpecGrid mediates all enquiries &mdash; your contact details go to the supplier only after you submit.
+          </p>
+
+          <div class="enquire-actions">
+            <a
+              href={`/enquire/${slug}`}
+              class="btn btn-primary"
+              id="enquireBtn"
+            >
+              Send an enquiry &rarr;
+            </a>
+
+            {waHref && (
+              <a
+                href={waHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn wa-btn"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                  <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.28-1.38c1.45.79 3.08 1.21 4.76 1.21h.01c5.46 0 9.9-4.45 9.9-9.91C21.96 6.45 17.5 2 12.04 2zm0 18.15h-.01c-1.5 0-2.97-.4-4.24-1.16l-.3-.18-3.15.83.84-3.08-.2-.32a8.19 8.19 0 01-1.26-4.4c0-4.53 3.7-8.22 8.24-8.22 2.2 0 4.27.86 5.83 2.42a8.14 8.14 0 012.41 5.81c0 4.54-3.7 8.23-8.24 8.23z"/>
+                </svg>
+                <span>WhatsApp</span>
+              </a>
+            )}
+          </div>
+        </section>
+
+        <!-- Similar Suppliers Recommendation -->
+        {similar.length > 0 && (
+          <section class="profile-section">
+            <div class="section-label mono">04 // Peer Cluster</div>
+            <h2>Similar suppliers</h2>
+            <div class="similar-grid">
+              {similar.map((s: any) => {
+                const sLoc = [s.location && s.location.city, s.location && s.location.state].filter(Boolean).join(", ");
+                const sBadge = s.status === "founding" ? "Founding member" : (s.status === "claimed" ? "Verified" : "Draft profile");
+                const sBadgeCls = s.status === "founding" ? "badge-founding" : (s.status === "claimed" ? "badge-verified" : "badge-draft");
+
+                return (
+                  <a href={`/companies/${s.slug}`} class="similar-card">
+                    <div class="similar-top">
+                      <div>
+                        <div class="similar-name">{s.name}</div>
+                        <div class="similar-loc mono">{sLoc}</div>
+                      </div>
+                      <span class={`badge ${sBadgeCls}`}>{sBadge}</span>
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+          </section>
+        )}
+      </div>
+    </div>
+  </BaseLayout>
+) : (
+  <BaseLayout
+    title="Not found — SpecGrid"
+    description="This page could not be found."
+    canonicalPath="/404"
+  >
+    <div class="wrap notfound-wrap">
+      <div class="titleblock" style="margin-bottom: 24px;">
+        <div>Error<strong>404</strong></div>
+        <div>Status<strong>Profile Not Found</strong></div>
+      </div>
+      <h1>Page not found</h1>
+      <p style="color: var(--ink-soft); margin: 12px 0 24px;">
+        The manufacturer profile you're looking for doesn't exist or has been relocated.
+      </p>
+      <div>
+        <a href="/search" class="btn btn-primary">Search Directory &rarr;</a>
+      </div>
+    </div>
+  </BaseLayout>
+)}
+
+<script is:inline define:vars={{ slug }}>
+  // Click tracking for enquiry CTA button
+  var enqBtn = document.getElementById("enquireBtn");
+  if (enqBtn) {
+    enqBtn.addEventListener("click", function(){
+      try {
+        if (window.__sg && window.__sg.track) {
+          window.__sg.track("enquiry_cta_click", slug);
+        }
+      } catch(e) {}
+    });
+  }
+</script>
+
+<style>
+  .profile-page {
+    padding: 36px 24px 64px;
+  }
+
+  .profile-nav {
+    margin-bottom: 20px;
+  }
+
+  .back-link {
+    font-size: 13px;
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  .back-link:hover {
+    color: var(--ink);
+  }
+
+  /* Draft Notice Banner */
+  .draft-notice-banner {
+    border: 1px solid #DFCE96;
+    background: #FDF9EE;
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 28px;
+  }
+
+  .notice-tag {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: #8C6F1E;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .draft-notice-banner p {
+    font-size: 13.5px;
+    color: #614D16;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .notice-link {
+    color: #614D16;
+    text-decoration: underline;
+    font-weight: 600;
+  }
+
+  /* Header */
+  .profile-header {
+    border-bottom: 1px solid var(--paper-line);
+    padding-bottom: 28px;
+    margin-bottom: 32px;
+  }
+
+  .profile-title-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .profile-name {
+    font-size: clamp(30px, 4.4vw, 42px);
+    line-height: 1.1;
+    margin-bottom: 6px;
+    letter-spacing: -0.02em;
+  }
+
+  .profile-sub-meta {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+  }
+
+  .verification-explainer {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    max-width: 680px;
+    margin-top: 8px;
+  }
+
+  .verification-explainer a {
+    color: var(--green-deep);
+    text-decoration: underline;
+  }
+
+  /* Profile Body */
+  .profile-body {
+    max-width: 760px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .profile-section {
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    color: var(--green);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .profile-section h2 {
+    font-size: 19px;
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+  }
+
+  .about-text {
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    line-height: 1.7;
+    margin: 0;
+  }
+
+  /* Certifications */
+  .certs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .cert-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--paper-line);
+    font-size: 14px;
+  }
+
+  .cert-item:last-child {
+    border-bottom: none;
+  }
+
+  .cert-issuer {
+    color: var(--ink-soft);
+  }
+
+  /* Enquire Panel */
+  .enquire-action-panel {
+    background: #F6F8F5;
+    border-color: #CFDED4;
+  }
+
+  .enquire-note {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin-bottom: 18px;
+  }
+
+  .enquire-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .wa-btn {
+    background: #25D366;
+    color: #fff;
+    border-color: #1EBE5B;
+  }
+
+  .wa-btn:hover {
+    background: #1EBE5B;
+    color: #fff;
+  }
+
+  /* Similar Suppliers */
+  .similar-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .similar-card {
+    border: 1px solid var(--paper-line);
+    background: var(--paper);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s ease;
+  }
+
+  .similar-card:hover {
+    border-color: var(--ink);
+  }
+
+  .similar-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .similar-name {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--ink);
+  }
+
+  .similar-loc {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+
+  .notfound-wrap {
+    padding: 64px 24px;
+  }
+</style>

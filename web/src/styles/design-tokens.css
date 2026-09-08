@@ -1,0 +1,314 @@
+/* ==========================================================================
+   SpecGrid Design Tokens & Core Styles
+   Sourced from web/design/specgrid-demo.html & engineering specifications motif
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+
+:root {
+  /* Color Palette */
+  --ink: #14242E;
+  --ink-soft: #3C4E58;
+  --ink-faint: #6F818C;
+  --paper: #ECEEEA;
+  --paper-line: #D7DBD3;
+  --card: #FFFFFF;
+  
+  /* Accent Tiers */
+  --green: #1F6F4A;
+  --green-deep: #145234;
+  --green-soft: #E4F0E9;
+  --amber: #E2A33B;
+  --amber-deep: #B97A1E;
+  --amber-soft: #F9F1E2;
+  --copper: #A8532E;
+  --copper-soft: #F6ECE7;
+  --red: #B23A22;
+  --red-soft: #FDF1EE;
+
+  /* Form & Component Metrics */
+  --radius: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+
+  /* Typography */
+  --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, Menlo, monospace;
+}
+
+/* Reset & Box Sizing */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  background-image:
+    linear-gradient(var(--paper-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
+  background-size: 28px 28px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img, svg {
+  max-width: 100%;
+  display: block;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+/* Typography Helpers */
+.mono {
+  font-family: var(--font-mono);
+}
+
+h1, h2, h3, h4, h5, h6, .display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+/* Container Wrapper */
+.wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 24px;
+  width: 100%;
+}
+
+/* ==========================================================================
+   Engineering / Blueprint Motifs & Components
+   ========================================================================== */
+
+/* Signature Technical Title-block Tag */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  border: 1px solid var(--paper-line);
+  background: var(--card);
+  padding: 4px 9px;
+  border-radius: var(--radius);
+}
+
+.tag .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+}
+
+/* Technical Engineering Title Block */
+.titleblock {
+  display: flex;
+  flex-wrap: wrap;
+  border: 1px solid var(--ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--card);
+}
+
+.titleblock > div {
+  padding: 7px 12px;
+  border-right: 1px solid var(--ink);
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.titleblock > div:last-child {
+  border-right: none;
+}
+
+.titleblock strong {
+  color: var(--ink);
+  display: block;
+  font-size: 11.5px;
+  margin-top: 1px;
+}
+
+/* Section Section Dividers */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 16px;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  height: 1px;
+  background: var(--paper-line);
+  flex: 1;
+}
+
+/* Technical Specification Rows (dashed border) */
+.spec-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--paper-line);
+  font-size: 13.5px;
+}
+
+.spec-row:last-child {
+  border-bottom: none;
+}
+
+.spec-row .k {
+  color: var(--ink-soft);
+  font-size: 12.5px;
+}
+
+.spec-row .v {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--ink);
+  text-align: right;
+  font-size: 12.5px;
+}
+
+/* Buttons */
+.btn {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: var(--radius);
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--ink);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+  white-space: nowrap;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  background: var(--amber);
+  color: var(--ink);
+  border-color: var(--amber-deep);
+}
+
+.btn-primary:hover {
+  background: var(--amber-deep);
+  color: #fff;
+}
+
+.btn-dark {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+.btn-dark:hover {
+  background: #0f1c24;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+}
+
+.btn-ghost:hover {
+  background: var(--card);
+}
+
+.btn-green {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--green-deep);
+}
+
+.btn-green:hover {
+  background: var(--green-deep);
+}
+
+/* Badges */
+.badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.badge-draft {
+  border: 1px solid var(--paper-line);
+  background: var(--card);
+  color: var(--ink-faint);
+}
+
+.badge-verified {
+  background: var(--green-soft);
+  color: var(--green-deep);
+  border: 1px solid rgba(31, 111, 74, 0.25);
+}
+
+.badge-founding {
+  background: var(--amber-soft);
+  color: var(--amber-deep);
+  border: 1px solid rgba(185, 122, 30, 0.3);
+}
+
+/* Skeleton Loading */
+@keyframes sgShimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skel {
+  background: linear-gradient(90deg, var(--paper-line) 0%, #E6EAE2 50%, var(--paper-line) 100%);
+  background-size: 800px 100%;
+  animation: sgShimmer 1.6s infinite linear;
+  border-radius: var(--radius);
+}

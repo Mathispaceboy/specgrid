@@ -1,0 +1,591 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { trackServer } from '../utils/tracking.js';
+
+// Server-side tracking for directory search queries
+const url = new URL(Astro.request.url);
+const q = url.searchParams.get("q") || null;
+const category = url.searchParams.get("category") || null;
+const state = url.searchParams.get("state") || null;
+const companyType = url.searchParams.get("company_type") || null;
+const hasCertification = url.searchParams.get("has_certification") || null;
+
+trackServer(Astro.request, "search", null, {
+  q,
+  category,
+  state,
+  companyType,
+  hasCertification
+}, Astro.locals);
+
+const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
+---
+
+<BaseLayout
+  title="Search — SpecGrid"
+  description="Search India's technical manufacturers by product, category, location, company type, and certification."
+  canonicalPath="/search"
+>
+  <div class="search-page wrap">
+    <!-- Search Query Bar -->
+    <section class="search-header">
+      <form class="search-form-bar" id="searchBarForm" action="/search" method="get">
+        <div class="search-input-box">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="7"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            id="searchInput"
+            name="q"
+            type="text"
+            autocomplete="off"
+            placeholder="Search manufacturers, products, specs..."
+            class="search-input"
+          />
+          <button type="submit" class="btn btn-primary search-submit-btn" aria-label="Search">
+            <span>Search</span> &rarr;
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Main Layout Grid: Facets Sidebar + Results Stream -->
+    <div class="search-layout">
+      <!-- Facets Sidebar -->
+      <aside class="search-sidebar">
+        <div class="sidebar-titleblock">
+          <span class="tag" style="margin-bottom: 12px;">
+            <span class="dot"></span>
+            <span>Filter Criteria</span>
+          </span>
+        </div>
+
+        <!-- Categories Filter -->
+        <div class="filter-group">
+          <div class="filter-label mono">Category</div>
+          <div id="catFilters" class="cat-chips-wrap">
+            <div class="skel" style="height: 28px; width: 90px; margin: 0 6px 6px 0; display: inline-block;"></div>
+            <div class="skel" style="height: 28px; width: 120px; margin: 0 6px 6px 0; display: inline-block;"></div>
+            <div class="skel" style="height: 28px; width: 80px; margin: 0 6px 6px 0; display: inline-block;"></div>
+          </div>
+        </div>
+
+        <!-- Company Type Filter -->
+        <div class="filter-group">
+          <label for="typeFilter" class="filter-label mono">Company Type</label>
+          <div class="select-wrap">
+            <select id="typeFilter" class="custom-select">
+              <option value="">All company types</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- State Filter -->
+        <div class="filter-group">
+          <label for="stateFilter" class="filter-label mono">Location / State</label>
+          <div class="select-wrap">
+            <select id="stateFilter" class="custom-select">
+              <option value="">All states</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Certification Checkbox -->
+        <div class="filter-group">
+          <label class="cert-checkbox-label">
+            <input type="checkbox" id="certFilter" class="custom-checkbox" />
+            <span>Has a certification on file</span>
+          </label>
+        </div>
+      </aside>
+
+      <!-- Results Column -->
+      <main class="results-col">
+        <!-- Results Header Metadata -->
+        <div class="results-header">
+          <div id="resultMeta" class="results-meta mono">Loading results&hellip;</div>
+        </div>
+
+        <!-- Results List -->
+        <div id="resultList" class="results-list">
+          <!-- Initial Loading Skeletons -->
+          <div class="result-card skel" style="height: 100px;"></div>
+          <div class="result-card skel" style="height: 100px;"></div>
+          <div class="result-card skel" style="height: 100px;"></div>
+        </div>
+      </main>
+    </div>
+  </div>
+</BaseLayout>
+
+<script is:inline define:vars={{ API_BASE }}>
+  // Interactive search directory script matching legacyWorker data flow
+  (async () => {
+    const b = API_BASE;
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get("q") || "";
+    const category = params.get("category") || "";
+    const state = params.get("state") || "";
+    const companyType = params.get("company_type") || "";
+    const hasCert = params.get("has_certification") === "true";
+
+    const searchInput = document.getElementById("searchInput");
+    if (searchInput) searchInput.value = q;
+
+    const certFilter = document.getElementById("certFilter");
+    if (certFilter) certFilter.checked = hasCert;
+
+    const typeLabels = {
+      manufacturer: "Manufacturer",
+      trader_distributor: "Trader / Distributor",
+      service_provider: "Service provider",
+      epc_contractor: "EPC contractor",
+      other: "Other"
+    };
+
+    function currentParams() {
+      const p = new URLSearchParams();
+      if (q) p.set("q", q);
+      if (category) p.set("category", category);
+      const t = document.getElementById("typeFilter") ? document.getElementById("typeFilter").value : "";
+      if (t) p.set("company_type", t);
+      const st = document.getElementById("stateFilter") ? document.getElementById("stateFilter").value : "";
+      if (st) p.set("state", st);
+      if (document.getElementById("certFilter") && document.getElementById("certFilter").checked) {
+        p.set("has_certification", "true");
+      }
+      return p;
+    }
+
+    function applyFilters() {
+      window.location.href = "/search?" + currentParams().toString();
+    }
+
+    // 1. Populate Dropdown Filter Options
+    try {
+      const opts = await fetch(b + "/api/filter-options").then(r => r.json());
+      const tf = document.getElementById("typeFilter");
+      if (tf) {
+        (opts.companyTypes || []).forEach(t => {
+          const o = document.createElement("option");
+          o.value = t;
+          o.textContent = typeLabels[t] || t;
+          if (t === companyType) o.selected = true;
+          tf.appendChild(o);
+        });
+        tf.addEventListener("change", applyFilters);
+      }
+
+      const sf = document.getElementById("stateFilter");
+      if (sf) {
+        (opts.states || []).forEach(s => {
+          const o = document.createElement("option");
+          o.value = s;
+          o.textContent = s;
+          if (s === state) o.selected = true;
+          sf.appendChild(o);
+        });
+        sf.addEventListener("change", applyFilters);
+      }
+
+      if (certFilter) {
+        certFilter.addEventListener("change", applyFilters);
+      }
+    } catch(e) {}
+
+    // 2. Populate Category Filter Chips
+    try {
+      const cats = await fetch(b + "/api/categories").then(r => r.json());
+      const cf = document.getElementById("catFilters");
+      if (cf) {
+        cf.innerHTML = "";
+        
+        // "All categories" link
+        const all = document.createElement("a");
+        const ap = currentParams();
+        ap.delete("category");
+        all.href = "/search" + (ap.toString() ? "?" + ap.toString() : "");
+        all.className = "cat-chip" + (!category ? " active" : "");
+        all.innerHTML = '<span class="chip-indicator"></span>All categories';
+        cf.appendChild(all);
+
+        // Each specific category link
+        (cats.results || []).forEach(c => {
+          const a = document.createElement("a");
+          const p = currentParams();
+          p.set("category", c.slug);
+          a.href = "/search?" + p.toString();
+          a.className = "cat-chip" + (category === c.slug ? " active" : "");
+          a.innerHTML = '<span class="chip-indicator"></span>' + (c.name || "").replace(/</g, "&lt;");
+          cf.appendChild(a);
+        });
+      }
+    } catch(e) {
+      const cf = document.getElementById("catFilters");
+      if (cf) cf.innerHTML = '<div style="color:var(--ink-soft);font-size:12px;">Categories unavailable</div>';
+    }
+
+    // 3. Populate Search Results
+    try {
+      const p = new URLSearchParams();
+      if (q) p.set("q", q);
+      if (category) p.set("category", category);
+      if (state) p.set("state", state);
+      if (companyType) p.set("company_type", companyType);
+      if (hasCert) p.set("has_certification", "true");
+      p.set("limit", "24");
+
+      const data = await fetch(b + "/api/companies?" + p.toString()).then(r => r.json());
+      const results = data.results || [];
+      const filterBits = [];
+      if (companyType) filterBits.push(typeLabels[companyType] || companyType);
+      if (state) filterBits.push(state);
+      if (hasCert) filterBits.push("certified");
+
+      const metaEl = document.getElementById("resultMeta");
+      if (metaEl) {
+        metaEl.textContent =
+          data.total + " result" + (data.total === 1 ? "" : "s") +
+          (q ? ' for "' + q + '"' : "") +
+          (filterBits.length ? " · " + filterBits.join(" · ") : "");
+      }
+
+      const listEl = document.getElementById("resultList");
+      if (listEl) {
+        listEl.innerHTML = "";
+        if (results.length === 0) {
+          listEl.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-title mono">NO SPECIFICATION MATCHES FOUND</div>
+              <p>No matches yet — try a broader search query, remove a filter, or browse by another category.</p>
+            </div>
+          `;
+          return;
+        }
+
+        results.forEach(co => {
+          const card = document.createElement("a");
+          card.className = "result-card";
+          card.href = "/companies/" + encodeURIComponent(co.slug);
+
+          const loc = [co.location && co.location.city, co.location && co.location.state].filter(Boolean).join(", ");
+          const statusBadgeCls = co.status === "founding" ? "badge-founding" : (co.status === "claimed" ? "badge-verified" : "badge-draft");
+          const statusBadge = co.status === "founding" ? "Founding member" : (co.status === "claimed" ? "Verified" : "Draft profile");
+
+          const metaBits = [loc];
+          if (co.companyType) metaBits.push(typeLabels[co.companyType] || co.companyType.replace(/_/g, " "));
+          if (co.foundedYear) metaBits.push("Est. " + co.foundedYear);
+
+          const safeName = (co.name || "").replace(/</g, "&lt;");
+          const safeMeta = metaBits.filter(Boolean).join(" · ").replace(/</g, "&lt;");
+          const safeDesc = co.description ? co.description.replace(/</g, "&lt;").slice(0, 160) : "";
+
+          card.innerHTML =
+            '<div class="card-top">' +
+              '<div>' +
+                '<h3 class="card-name">' + safeName + '</h3>' +
+                '<div class="card-meta mono">' + safeMeta + '</div>' +
+              '</div>' +
+              '<span class="badge ' + statusBadgeCls + '">' + statusBadge + '</span>' +
+            '</div>' +
+            (safeDesc ? '<p class="card-desc">' + safeDesc + '&hellip;</p>' : '') +
+            '<div class="card-foot mono">' +
+              '<span>View technical profile</span>' +
+              '<span class="card-arrow">&rarr;</span>' +
+            '</div>';
+
+          listEl.appendChild(card);
+        });
+      }
+    } catch(e) {
+      const metaEl = document.getElementById("resultMeta");
+      if (metaEl) metaEl.textContent = "Results are temporarily unavailable.";
+    }
+  })();
+</script>
+
+<style>
+  .search-page {
+    padding: 40px 24px 64px;
+  }
+
+  .search-header {
+    margin-bottom: 32px;
+  }
+
+  .search-form-bar {
+    max-width: 100%;
+  }
+
+  .search-input-box {
+    display: flex;
+    align-items: center;
+    background: var(--card);
+    border: 1.5px solid var(--ink);
+    border-radius: var(--radius);
+    padding: 4px 6px 4px 16px;
+    box-shadow: 0 2px 5px rgba(20, 36, 46, 0.04);
+  }
+
+  .search-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--ink-soft);
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+
+  .search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 16px;
+    color: var(--ink);
+    padding: 10px 0;
+  }
+
+  .search-submit-btn {
+    padding: 10px 18px;
+    font-size: 13px;
+  }
+
+  /* Two-column layout */
+  .search-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 36px;
+    align-items: start;
+  }
+
+  /* Sidebar */
+  .search-sidebar {
+    background: var(--card);
+    border: 1px solid var(--paper-line);
+    padding: 20px;
+    border-radius: var(--radius);
+  }
+
+  .filter-group {
+    margin-bottom: 22px;
+  }
+
+  .filter-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .filter-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .cat-chips-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  :global(.cat-chip) {
+    font-size: 12px;
+    padding: 5px 10px;
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--ink-soft);
+    background: var(--paper);
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  }
+
+  :global(.cat-chip:hover) {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  :global(.cat-chip.active) {
+    color: var(--green-deep);
+    font-weight: 600;
+    background: var(--green-soft);
+    border-color: rgba(31, 111, 74, 0.35);
+  }
+
+  :global(.chip-indicator) {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--green);
+    display: inline-block;
+  }
+
+  .select-wrap {
+    position: relative;
+  }
+
+  .custom-select {
+    width: 100%;
+    padding: 9px 12px;
+    font-size: 13.5px;
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    background: var(--paper);
+    color: var(--ink);
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+  }
+
+  .custom-select:focus {
+    border-color: var(--ink);
+  }
+
+  .cert-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    user-select: none;
+    margin-top: 6px;
+  }
+
+  .custom-checkbox {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--green);
+    cursor: pointer;
+  }
+
+  /* Results Column */
+  .results-col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .results-header {
+    border-bottom: 1px solid var(--paper-line);
+    padding-bottom: 12px;
+  }
+
+  .results-meta {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+
+  .results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  :global(.result-card) {
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  :global(.result-card:hover) {
+    border-color: var(--ink);
+    box-shadow: 0 2px 6px rgba(20, 36, 46, 0.05);
+  }
+
+  :global(.card-top) {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  :global(.card-name) {
+    font-size: 16.5px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+
+  :global(.card-meta) {
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  :global(.card-desc) {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  :global(.card-foot) {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: var(--green-deep);
+    font-weight: 500;
+    border-top: 1px dashed var(--paper-line);
+    padding-top: 10px;
+    margin-top: 4px;
+  }
+
+  :global(.card-arrow) {
+    transition: transform 0.15s ease;
+  }
+
+  :global(.result-card:hover .card-arrow) {
+    transform: translateX(3px);
+  }
+
+  :global(.empty-state) {
+    border: 1px dashed var(--paper-line);
+    background: var(--card);
+    padding: 36px 24px;
+    border-radius: var(--radius);
+    text-align: center;
+    color: var(--ink-soft);
+  }
+
+  :global(.empty-title) {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  @media (max-width: 768px) {
+    .search-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .search-input-box {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 10px;
+      gap: 8px;
+    }
+    .search-icon {
+      display: none;
+    }
+    .search-submit-btn {
+      width: 100%;
+    }
+  }
+</style>

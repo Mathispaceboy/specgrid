@@ -1,0 +1,277 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="SpecGrid Design System & Architecture Preview"
+  description="Design system tokens, typography, and architecture preview for the SpecGrid redesign."
+  canonicalPath="/design-system"
+>
+  <section class="preview-hero">
+    <div class="wrap">
+      <div class="titleblock" style="margin-bottom: 24px;">
+        <div>System<strong>Astro 5 + CF Workers</strong></div>
+        <div>Branch<strong>astro-redesign</strong></div>
+        <div>Phase<strong>01: Foundation</strong></div>
+        <div>Theme<strong>Engineering Spec / Blueprint</strong></div>
+      </div>
+
+      <div class="tag" style="margin-bottom: 16px;">
+        <span class="dot"></span>
+        <span>Astro Foundation Live Preview</span>
+      </div>
+
+      <h1 class="hero-title">Engineering-Grade Technical Manufacturer Directory</h1>
+      <p class="hero-lead">
+        Design tokens, industrial visual hierarchy, and dual-routing coexistence architecture are now active.
+      </p>
+
+      <div class="hero-actions">
+        <a href="/search" class="btn btn-primary">Test Unmigrated Route (Search) &rarr;</a>
+        <a href="/search?version=legacy" class="btn btn-ghost">Test ?version=legacy Force</a>
+        <a href="/companies/sky-power-switchgears" class="btn btn-dark">Test Profile Route Fallback &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-block">
+    <div class="wrap">
+      <div class="divider">Design Reference &amp; Tokens</div>
+      <h2 class="section-heading">Color Palette &amp; Material Hierarchy</h2>
+      <p class="section-sub">Drawn directly from <code>web/design/specgrid-demo.html</code> &amp; industrial blueprint motifs.</p>
+
+      <div class="swatches-grid">
+        <div class="swatch-card" style="background: var(--ink); color: #fff;">
+          <div class="swatch-name">Ink Primary</div>
+          <div class="swatch-hex mono">#14242E</div>
+        </div>
+        <div class="swatch-card" style="background: var(--ink-soft); color: #fff;">
+          <div class="swatch-name">Ink Soft</div>
+          <div class="swatch-hex mono">#3C4E58</div>
+        </div>
+        <div class="swatch-card" style="background: var(--paper); border: 1px solid var(--paper-line); color: var(--ink);">
+          <div class="swatch-name">Paper Surface</div>
+          <div class="swatch-hex mono">#ECEEEA</div>
+        </div>
+        <div class="swatch-card" style="background: var(--green); color: #fff;">
+          <div class="swatch-name">Green Accent</div>
+          <div class="swatch-hex mono">#1F6F4A</div>
+        </div>
+        <div class="swatch-card" style="background: var(--amber); color: var(--ink);">
+          <div class="swatch-name">Amber Accent</div>
+          <div class="swatch-hex mono">#E2A33B</div>
+        </div>
+        <div class="swatch-card" style="background: var(--copper); color: #fff;">
+          <div class="swatch-name">Copper Tier</div>
+          <div class="swatch-hex mono">#A8532E</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-block">
+    <div class="wrap">
+      <div class="divider">Engineering Components</div>
+      <h2 class="section-heading">Technical Card &amp; Specification Row Motif</h2>
+
+      <div class="cards-preview-grid">
+        <!-- Sample Spec Card 1 -->
+        <div class="spec-card">
+          <div class="spec-card-header">
+            <span class="tag"><span class="dot"></span>SPEC-0108</span>
+            <span class="badge badge-founding">Founding Member</span>
+          </div>
+          <h3 class="spec-card-title">Sky Power Switchgears</h3>
+          <div class="spec-card-meta mono">Salem, Tamil Nadu &middot; Est. 2012</div>
+          <div class="spec-list">
+            <div class="spec-row">
+              <span class="k">Panel Type</span>
+              <span class="v">AIS, VCB, RMU</span>
+            </div>
+            <div class="spec-row">
+              <span class="k">Voltage Class</span>
+              <span class="v">Up to 36 kV</span>
+            </div>
+            <div class="spec-row">
+              <span class="k">IP Rating</span>
+              <span class="v">IP54 / IP65</span>
+            </div>
+            <div class="spec-row">
+              <span class="k">Testing &amp; Certs</span>
+              <span class="v">IEC 62271, ISO 9001</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sample Spec Card 2 -->
+        <div class="spec-card">
+          <div class="spec-card-header">
+            <span class="tag"><span class="dot" style="background: var(--ink-faint);"></span>SPEC-0240</span>
+            <span class="badge badge-verified">Verified</span>
+          </div>
+          <h3 class="spec-card-title">Noyyal Power Transformers</h3>
+          <div class="spec-card-meta mono">Ganapathy, Coimbatore &middot; Est. 2016</div>
+          <div class="spec-list">
+            <div class="spec-row">
+              <span class="k">Transformer Type</span>
+              <span class="v">Cast Resin Dry-Type</span>
+            </div>
+            <div class="spec-row">
+              <span class="k">Capacity Range</span>
+              <span class="v">100 &ndash; 2500 kVA</span>
+            </div>
+            <div class="spec-row">
+              <span class="k">Efficiency Standard</span>
+              <span class="v">Class A0 / Bk</span>
+            </div>
+            <div class="spec-row">
+              <span class="k">Certifications</span>
+              <span class="v">BIS, ISO 14001</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-block" style="padding-bottom: 64px;">
+    <div class="wrap">
+      <div class="divider">Dual-Routing Architecture Status</div>
+      <div class="status-card">
+        <h3 style="margin-bottom: 12px;">How coexistence works in Phase 1:</h3>
+        <ul class="status-list mono">
+          <li><strong>1. Astro Router:</strong> Currently serves <code>/design-system</code> using the new Astro component pipeline.</li>
+          <li><strong>2. Legacy Fallback:</strong> All unmigrated routes (<code>/</code>, <code>/search</code>, <code>/companies/*</code>, <code>/account</code>, <code>/for-suppliers</code>, etc.) are seamlessly intercepted by <code>middleware.js</code> and handled by <code>legacyWorker.js</code>.</li>
+          <li><strong>3. Comparison Mode:</strong> Appending <code>?version=legacy</code> forces the legacy worker handler on any URL and automatically injects <code>&lt;meta name="robots" content="noindex, nofollow"&gt;</code> plus <code>X-Robots-Tag</code>.</li>
+          <li><strong>4. Clean Sitemap:</strong> <code>sitemap.xml</code> never emits <code>?version=</code> URLs.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .preview-hero {
+    padding: 64px 0 40px;
+  }
+
+  .hero-title {
+    font-size: clamp(32px, 4.5vw, 48px);
+    line-height: 1.1;
+    max-width: 800px;
+    margin-bottom: 16px;
+  }
+
+  .hero-lead {
+    font-size: 17px;
+    color: var(--ink-soft);
+    max-width: 640px;
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .section-block {
+    padding: 40px 0;
+  }
+
+  .section-heading {
+    font-size: 24px;
+    margin-bottom: 6px;
+  }
+
+  .section-sub {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin-bottom: 24px;
+  }
+
+  .swatches-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+  }
+
+  .swatch-card {
+    padding: 20px;
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 110px;
+  }
+
+  .swatch-name {
+    font-weight: 600;
+    font-size: 13.5px;
+  }
+
+  .swatch-hex {
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    opacity: 0.9;
+  }
+
+  .cards-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+  }
+
+  .spec-card {
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 22px;
+    box-shadow: 0 1px 3px rgba(20, 36, 46, 0.04);
+  }
+
+  .spec-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .spec-card-title {
+    font-size: 18px;
+    margin-bottom: 4px;
+  }
+
+  .spec-card-meta {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 16px;
+  }
+
+  .spec-list {
+    border-top: 1px dashed var(--paper-line);
+    padding-top: 8px;
+  }
+
+  .status-card {
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+
+  .status-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+
+  .status-list strong {
+    color: var(--ink);
+  }
+</style>

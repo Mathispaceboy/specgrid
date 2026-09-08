@@ -1,0 +1,368 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const { slug } = Astro.params;
+
+if (!slug) {
+  return new Response("Not found", { status: 404 });
+}
+
+const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
+
+// Fetch company details
+let co = null;
+try {
+  const res = await fetch(`${API_BASE}/api/companies/${encodeURIComponent(slug)}`);
+  if (!res.ok) {
+    Astro.response.status = 404;
+  } else {
+    co = await res.json();
+  }
+} catch (e) {
+  Astro.response.status = 500;
+}
+---
+
+{co ? (
+  <BaseLayout
+    title={`Enquire — ${co.name} — SpecGrid`}
+    description={`Send a mediated enquiry to ${co.name} on SpecGrid.`}
+    canonicalPath={`/enquire/${slug}`}
+  >
+    <div class="form-page wrap">
+      <!-- Back Link -->
+      <div class="form-nav">
+        <a href={`/companies/${slug}`} class="back-link mono">&larr; Back to {co.name}</a>
+      </div>
+
+      <div class="form-box">
+        <div class="titleblock" style="margin-bottom: 24px;">
+          <div>Channel<strong>Mediated RFQ Router</strong></div>
+          <div>Recipient<strong>{co.name}</strong></div>
+          <div>Routing<strong>Direct &middot; No Resale</strong></div>
+          <div>Privacy<strong>Contact Shared Only Upon Send</strong></div>
+        </div>
+
+        <div class="tag" style="margin-bottom: 12px;">
+          <span class="dot"></span>
+          <span>Supplier RFQ Router</span>
+        </div>
+
+        <h1 class="form-title">Send an enquiry to {co.name}</h1>
+        <p class="form-sub">
+          SpecGrid routes this to the supplier directly &mdash; your contact details are shared with them, not with anyone else.
+        </p>
+
+        <form id="enqForm" class="enquiry-form">
+          <div class="fld">
+            <label for="e_name" class="fld-label mono">Your Name <span class="req">*</span></label>
+            <input id="e_name" required class="fld-input" placeholder="e.g. Rajesh Kumar" />
+          </div>
+
+          <div class="fld-grid">
+            <div class="fld">
+              <label for="e_company" class="fld-label mono">Your Company <span class="opt">(optional)</span></label>
+              <input id="e_company" class="fld-input" placeholder="e.g. Southern Power Infra" />
+            </div>
+
+            <div class="fld">
+              <label for="e_role" class="fld-label mono">Your Role <span class="opt">(optional)</span></label>
+              <input id="e_role" class="fld-input" placeholder="e.g. Procurement Manager" />
+            </div>
+          </div>
+
+          <div class="fld-grid">
+            <div class="fld">
+              <label for="e_email" class="fld-label mono">Email Address</label>
+              <input id="e_email" type="email" class="fld-input" placeholder="name@company.com" />
+            </div>
+
+            <div class="fld">
+              <label for="e_phone" class="fld-label mono">Phone Number <span class="opt">(email or phone required)</span></label>
+              <input id="e_phone" type="tel" class="fld-input" placeholder="e.g. +91 98765 43210" />
+            </div>
+          </div>
+
+          <div class="fld">
+            <label for="e_subject" class="fld-label mono">Subject</label>
+            <input id="e_subject" class="fld-input" placeholder="e.g. 36kV VCB panel — 50 units, quote needed" />
+          </div>
+
+          <div class="fld">
+            <label for="e_message" class="fld-label mono">Details &amp; Specifications <span class="req">*</span></label>
+            <textarea
+              id="e_message"
+              rows="4"
+              required
+              class="fld-textarea"
+              placeholder="What do you need, quantities, technical ratings, required certifications, delivery timeline..."
+            ></textarea>
+          </div>
+
+          <div class="fld-grid">
+            <div class="fld">
+              <label for="e_industry" class="fld-label mono">Your Industry <span class="opt">(optional)</span></label>
+              <input id="e_industry" class="fld-input" placeholder="e.g. EPC contractor, solar installer" />
+            </div>
+
+            <div class="fld">
+              <label for="e_urgency" class="fld-label mono">Procurement Timeline <span class="opt">(optional)</span></label>
+              <select id="e_urgency" class="fld-select">
+                <option value="">Not sure yet</option>
+                <option value="immediate">Immediate — ready to order</option>
+                <option value="this_quarter">This quarter</option>
+                <option value="researching">Just researching options</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="fld">
+            <label for="e_by" class="fld-label mono">Response Requested By <span class="opt">(optional)</span></label>
+            <input id="e_by" type="date" class="fld-input" />
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-primary submit-btn" type="submit">
+              <span>Send enquiry</span> &rarr;
+            </button>
+          </div>
+
+          <div id="enqMsg" class="form-msg"></div>
+        </form>
+      </div>
+    </div>
+  </BaseLayout>
+) : (
+  <BaseLayout
+    title="Not found — SpecGrid"
+    description="This page could not be found."
+    canonicalPath="/404"
+  >
+    <div class="wrap notfound-wrap">
+      <h1>Supplier not found</h1>
+      <p style="color: var(--ink-soft); margin: 12px 0 24px;">The supplier you are trying to enquire with does not exist.</p>
+      <a href="/search" class="btn btn-primary">Back to Directory &rarr;</a>
+    </div>
+  </BaseLayout>
+)}
+
+<script is:inline define:vars={{ slug, API_BASE }}>
+  const form = document.getElementById("enqForm");
+  if (form) {
+    form.addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const btn = form.querySelector("button[type='submit']");
+      const msg = document.getElementById("enqMsg");
+      const email = document.getElementById("e_email").value.trim();
+      const phone = document.getElementById("e_phone").value.trim();
+
+      if (!email && !phone) {
+        msg.className = "form-msg err";
+        msg.textContent = "Please provide at least an email or a phone number.";
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Sending…";
+      msg.className = "form-msg";
+
+      try {
+        const payload = {
+          companySlug: slug,
+          buyerName: document.getElementById("e_name").value,
+          buyerEmail: email || null,
+          buyerPhone: phone || null,
+          subject: document.getElementById("e_subject").value || null,
+          message: document.getElementById("e_message").value,
+          responseBy: document.getElementById("e_by").value || null,
+          companyName: document.getElementById("e_company").value || null,
+          role: document.getElementById("e_role").value || null,
+          industry: document.getElementById("e_industry").value || null,
+          urgency: document.getElementById("e_urgency").value || null,
+        };
+
+        const res = await fetch(API_BASE + "/api/enquiry", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          msg.className = "form-msg err";
+          msg.textContent = data.error || "Something went wrong — please try again.";
+          btn.disabled = false;
+          btn.innerHTML = "<span>Send enquiry</span> &rarr;";
+          return;
+        }
+
+        msg.className = "form-msg ok";
+        msg.textContent = data.message || "Enquiry sent. The manufacturer has been notified.";
+        form.querySelectorAll("input, textarea, select, button").forEach(el => el.disabled = true);
+
+        try {
+          if (window.__sg) {
+            window.__sg.track("enquiry_submitted", slug);
+            if (email) window.__sg.identify(email);
+          }
+        } catch(err) {}
+      } catch (err) {
+        msg.className = "form-msg err";
+        msg.textContent = "Network error — please check your connection and try again.";
+        btn.disabled = false;
+        btn.innerHTML = "<span>Send enquiry</span> &rarr;";
+      }
+    });
+  }
+</script>
+
+<style>
+  .form-page {
+    padding: 36px 24px 64px;
+  }
+
+  .form-nav {
+    margin-bottom: 20px;
+  }
+
+  .back-link {
+    font-size: 13px;
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  .back-link:hover {
+    color: var(--ink);
+  }
+
+  .form-box {
+    max-width: 640px;
+    margin: 0 auto;
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 32px;
+    box-shadow: 0 1px 4px rgba(20, 36, 46, 0.04);
+  }
+
+  .form-title {
+    font-size: 24px;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+
+  .form-sub {
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin-bottom: 28px;
+  }
+
+  .enquiry-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .fld-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .fld {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .fld-label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .req {
+    color: var(--copper);
+  }
+
+  .opt {
+    color: var(--ink-faint);
+    text-transform: none;
+    font-weight: 400;
+  }
+
+  .fld-input, .fld-textarea, .fld-select {
+    width: 100%;
+    padding: 11px 13px;
+    font-size: 14.5px;
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    background: var(--paper);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s ease;
+    font-family: var(--font-body);
+  }
+
+  .fld-input:focus, .fld-textarea:focus, .fld-select:focus {
+    border-color: var(--ink);
+    background: #fff;
+  }
+
+  .fld-textarea {
+    resize: vertical;
+    line-height: 1.5;
+  }
+
+  .form-actions {
+    margin-top: 8px;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 13px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .form-msg {
+    margin-top: 14px;
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    font-size: 13.5px;
+    line-height: 1.5;
+    display: none;
+  }
+
+  .form-msg.ok {
+    background: var(--green-soft);
+    border: 1px solid rgba(31, 111, 74, 0.4);
+    color: var(--green-deep);
+    display: block;
+  }
+
+  .form-msg.err {
+    background: #FDF1EE;
+    border: 1px solid #E8B3A4;
+    color: #A3402A;
+    display: block;
+  }
+
+  .notfound-wrap {
+    padding: 64px 24px;
+    text-align: center;
+  }
+
+  @media (max-width: 600px) {
+    .fld-grid {
+      grid-template-columns: 1fr;
+    }
+    .form-box {
+      padding: 24px 20px;
+    }
+  }
+</style>

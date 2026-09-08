@@ -1,0 +1,147 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="About — SpecGrid"
+  description="Why SpecGrid exists and who built it — India's technical manufacturer directory, built from Coimbatore."
+  canonicalPath="/about"
+>
+  <article class="doc-page">
+    <div class="wrap">
+      <!-- Technical Document Header -->
+      <header class="doc-header">
+        <div class="titleblock" style="margin-bottom: 24px;">
+          <div>Document<strong>DOC-REF // ABOUT-01</strong></div>
+          <div>Origin<strong>Coimbatore, Tamil Nadu</strong></div>
+          <div>Scope<strong>Technical Manufacturer Directory</strong></div>
+          <div>Status<strong>Active</strong></div>
+        </div>
+
+        <div class="tag" style="margin-bottom: 14px;">
+          <span class="dot"></span>
+          <span>Directory Mission &amp; Background</span>
+        </div>
+
+        <h1 class="doc-title">About SpecGrid</h1>
+        <p class="doc-lead">
+          SpecGrid is a technical manufacturer directory for India, built to answer one question buyers keep struggling with: <em>who actually makes this, and to what spec?</em>
+        </p>
+      </header>
+
+      <!-- Document Content Body -->
+      <div class="doc-content">
+        <section class="doc-section">
+          <div class="section-tag mono">01 // Problem Statement</div>
+          <h2>Why this exists</h2>
+          <p>
+            Most B2B directories in India are optimized for ad spend and lead volume, not accuracy. A buyer looking for a specific voltage class or certification has to call five suppliers to find one who actually matches — and the suppliers who do match often can't be found at all, because they don't outspend everyone else on listings.
+          </p>
+          <p>
+            SpecGrid starts from the manufacturer's own public information — specs, certifications, what they actually build — and makes that searchable directly, without ad placement deciding who shows up first.
+          </p>
+        </section>
+
+        <section class="doc-section">
+          <div class="section-tag mono">02 // Industrial Cluster</div>
+          <h2>Why Coimbatore</h2>
+          <p>
+            SpecGrid started with the Elektrotec exhibitor community in Coimbatore — one of India's densest clusters of switchgear, transformer, and industrial electrical manufacturers. It's growing outward from there, one verified category at a time.
+          </p>
+        </section>
+
+        <section class="doc-section contact-panel">
+          <div class="section-tag mono">03 // Communication Channel</div>
+          <h2>Get in touch</h2>
+          <p>
+            Questions, corrections, or interested in claiming your profile:
+          </p>
+          <div style="margin-top: 14px;">
+            <a href="mailto:mathi@specgrid.in" class="btn btn-primary">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+              </svg>
+              mathi@specgrid.in
+            </a>
+          </div>
+        </section>
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .doc-page {
+    padding: 56px 0 72px;
+  }
+
+  .doc-header {
+    margin-bottom: 40px;
+    border-bottom: 1px solid var(--paper-line);
+    padding-bottom: 32px;
+  }
+
+  .doc-title {
+    font-size: clamp(32px, 4.5vw, 44px);
+    line-height: 1.1;
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+  }
+
+  .doc-lead {
+    font-size: 18px;
+    color: var(--ink-soft);
+    max-width: 680px;
+    line-height: 1.6;
+  }
+
+  .doc-lead em {
+    color: var(--ink);
+    font-style: italic;
+    font-weight: 500;
+  }
+
+  .doc-content {
+    max-width: 720px;
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+  }
+
+  .doc-section {
+    position: relative;
+  }
+
+  .section-tag {
+    font-size: 11px;
+    color: var(--green);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .doc-section h2 {
+    font-size: 20px;
+    margin-bottom: 14px;
+    letter-spacing: -0.01em;
+  }
+
+  .doc-section p {
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.75;
+    margin-bottom: 14px;
+  }
+
+  .doc-section p:last-child {
+    margin-bottom: 0;
+  }
+
+  .contact-panel {
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    padding: 24px 28px;
+    border-radius: var(--radius);
+  }
+</style>

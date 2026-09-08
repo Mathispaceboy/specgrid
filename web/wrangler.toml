@@ -1,6 +1,11 @@
 name = "specgrid-web"
-main = "worker.js"
+main = "./dist/_worker.js/index.js"
 compatibility_date = "2026-08-01"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
 
 # specgrid.in and www.specgrid.in are attached to this Worker as custom domains
 # in the Cloudflare dashboard (Workers & Pages > specgrid-web > Settings >

@@ -1,0 +1,187 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Terms of Service — SpecGrid"
+  description="Terms of Service for SpecGrid, India's technical manufacturer directory."
+  canonicalPath="/terms"
+>
+  <article class="doc-page">
+    <div class="wrap">
+      <header class="doc-header">
+        <div class="titleblock" style="margin-bottom: 24px;">
+          <div>Document<strong>DOC-REF // TOS-2026-08</strong></div>
+          <div>Jurisdiction<strong>India / Tamil Nadu</strong></div>
+          <div>Effective<strong>August 2026</strong></div>
+          <div>Platform<strong>specgrid.in</strong></div>
+        </div>
+
+        <div class="tag" style="margin-bottom: 14px;">
+          <span class="dot"></span>
+          <span>Legal Specification</span>
+        </div>
+
+        <h1 class="doc-title">Terms of Service</h1>
+        <div class="doc-meta mono">Last updated: August 2026</div>
+        <p class="doc-lead">
+          These terms govern use of SpecGrid (specgrid.in). By using this site, you agree to them.
+        </p>
+      </header>
+
+      <div class="doc-content">
+        <section class="doc-section">
+          <div class="section-tag mono">§ 01 // Definition</div>
+          <h2>What SpecGrid is</h2>
+          <p>
+            SpecGrid is a directory of technical manufacturers, compiled in part from publicly available information and in part from information companies submit directly. It is not a marketplace, escrow service, or party to any transaction between a buyer and a supplier.
+          </p>
+        </section>
+
+        <section class="doc-section">
+          <div class="section-tag mono">§ 02 // Verification &amp; Accuracy</div>
+          <h2>Data sources and accuracy</h2>
+          <p>
+            Draft profiles are compiled from public sources (company websites, public directories, industry listings) and have not been verified by the company they describe. Claimed profiles are controlled and updated by the company itself. SpecGrid does not guarantee the accuracy of any profile and is not liable for decisions made based on listed information.
+          </p>
+        </section>
+
+        <section class="doc-section">
+          <div class="section-tag mono">§ 03 // Correction &amp; Deletion</div>
+          <h2>Your right to correct or remove your listing</h2>
+          <p>
+            Any company can request correction or removal of its draft profile at any time by claiming it or by emailing <a href="mailto:mathi@specgrid.in" class="doc-link">mathi@specgrid.in</a>. See the <a href="/data-disclaimer" class="doc-link">Data Disclaimer</a> for details.
+          </p>
+        </section>
+
+        <section class="doc-section">
+          <div class="section-tag mono">§ 04 // Communications</div>
+          <h2>Enquiries</h2>
+          <p>
+            SpecGrid routes buyer enquiries to suppliers but is not responsible for the outcome of any resulting communication, quote, or transaction. Use judgment as you would with any other lead source.
+          </p>
+        </section>
+
+        <section class="doc-section">
+          <div class="section-tag mono">§ 05 // Proprietary Rights</div>
+          <h2>Intellectual property</h2>
+          <p>
+            The SpecGrid name, design, and search/categorization schema belong to SpecGrid. Company-submitted content (descriptions, specs, certifications) remains the property of the submitting company.
+          </p>
+        </section>
+
+        <section class="doc-section">
+          <div class="section-tag mono">§ 06 // Disclaimers</div>
+          <h2>Limitation of liability</h2>
+          <p>
+            SpecGrid is provided "as is." We are not liable for indirect, incidental, or consequential damages arising from use of the site, including reliance on directory data or enquiry outcomes.
+          </p>
+        </section>
+
+        <section class="doc-section">
+          <div class="section-tag mono">§ 07 // Revisions</div>
+          <h2>Changes</h2>
+          <p>
+            These terms may be updated as the product evolves; material changes will be reflected here with an updated date.
+          </p>
+        </section>
+
+        <section class="doc-section contact-panel">
+          <div class="section-tag mono">§ 08 // Inquiry</div>
+          <h2>Contact</h2>
+          <p>
+            Questions regarding these terms:
+          </p>
+          <div style="margin-top: 14px;">
+            <a href="mailto:mathi@specgrid.in" class="btn btn-primary">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+              </svg>
+              mathi@specgrid.in
+            </a>
+          </div>
+        </section>
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .doc-page {
+    padding: 56px 0 72px;
+  }
+
+  .doc-header {
+    margin-bottom: 40px;
+    border-bottom: 1px solid var(--paper-line);
+    padding-bottom: 32px;
+  }
+
+  .doc-title {
+    font-size: clamp(32px, 4.5vw, 44px);
+    line-height: 1.1;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+
+  .doc-meta {
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .doc-lead {
+    font-size: 17px;
+    color: var(--ink-soft);
+    max-width: 680px;
+    line-height: 1.6;
+  }
+
+  .doc-content {
+    max-width: 720px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .doc-section {
+    position: relative;
+  }
+
+  .section-tag {
+    font-size: 11px;
+    color: var(--green);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .doc-section h2 {
+    font-size: 19px;
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+  }
+
+  .doc-section p {
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    line-height: 1.75;
+  }
+
+  .doc-link {
+    color: var(--green-deep);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-weight: 500;
+  }
+
+  .contact-panel {
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    padding: 24px 28px;
+    border-radius: var(--radius);
+  }
+</style>

@@ -1,0 +1,210 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Data Disclaimer — SpecGrid"
+  description="How SpecGrid compiles draft profiles, and how to claim, correct, or remove yours."
+  canonicalPath="/data-disclaimer"
+>
+  <article class="doc-page">
+    <div class="wrap">
+      <header class="doc-header">
+        <div class="titleblock" style="margin-bottom: 24px;">
+          <div>Document<strong>DOC-REF // DATA-DISCLAIMER-2026-08</strong></div>
+          <div>Verification Tier<strong>Specification &amp; Status Tiers</strong></div>
+          <div>Effective<strong>August 2026</strong></div>
+          <div>Platform<strong>specgrid.in</strong></div>
+        </div>
+
+        <div class="tag" style="margin-bottom: 14px;">
+          <span class="dot"></span>
+          <span>Data Integrity &amp; Verification Tiers</span>
+        </div>
+
+        <h1 class="doc-title">Data Disclaimer</h1>
+        <div class="doc-meta mono">Last updated: August 2026</div>
+        <p class="doc-lead">
+          Many profiles on SpecGrid start as <strong>draft profiles</strong>: compiled from information the company has already made public (its own website, public directories, industry listings), before the company has reviewed or confirmed it.
+        </p>
+      </header>
+
+      <div class="doc-content">
+        <!-- Section 1 -->
+        <section class="doc-section">
+          <div class="section-tag mono">§ 01 // Public Draft Scope</div>
+          <h2>What this means</h2>
+          <div class="tier-card">
+            <div style="margin-bottom: 10px;">
+              <span class="badge badge-draft">Draft Profile</span>
+            </div>
+            <p>
+              A draft profile is our best attempt at an accurate summary — it is not verified by the company and may contain errors, outdated information, or gaps. It is clearly labeled "Draft profile" wherever it appears.
+            </p>
+          </div>
+        </section>
+
+        <!-- Section 2 -->
+        <section class="doc-section">
+          <div class="section-tag mono">§ 02 // Supplier Rights</div>
+          <h2>If you are the company</h2>
+          <p>
+            You can: claim your profile to take control of it (edit specs, description, certifications directly), or request a correction or removal by emailing <a href="mailto:mathi@specgrid.in" class="doc-link">mathi@specgrid.in</a> — no verification hurdle required to have inaccurate information removed.
+          </p>
+        </section>
+
+        <!-- Section 3 -->
+        <section class="doc-section">
+          <div class="section-tag mono">§ 03 // Status Tiers &amp; Badges</div>
+          <h2>Once claimed</h2>
+          
+          <div class="tiers-stack">
+            <div class="tier-card">
+              <div style="margin-bottom: 10px;">
+                <span class="badge badge-verified">Verified</span>
+              </div>
+              <p>
+                A "Verified" badge means SpecGrid manually reviewed the company (checked its LinkedIn presence, its own website, and the format of its GSTIN/CIN) — this is not a live government database check, since no free public GST/MCA verification API exists today; it is a manual, judgment-based check by SpecGrid.
+              </p>
+            </div>
+
+            <div class="tier-card">
+              <div style="margin-bottom: 10px;">
+                <span class="badge" style="background: var(--paper-line); color: var(--ink);">Claimed</span>
+              </div>
+              <p>
+                A "Claimed" badge means only that the claimant's work email matched the company's own listed website domain — no manual review has happened yet.
+              </p>
+            </div>
+
+            <div class="tier-card">
+              <div style="margin-bottom: 10px;">
+                <span class="badge badge-founding">Founding Member</span>
+              </div>
+              <p>
+                A "Founding member" badge is always manually reviewed. We will update this page if and when live government verification becomes part of the process.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="doc-section contact-panel">
+          <div class="section-tag mono">§ 04 // Contact &amp; Updates</div>
+          <h2>Questions or Corrections</h2>
+          <p>
+            If you need profile updates or have verification questions:
+          </p>
+          <div style="margin-top: 14px;">
+            <a href="mailto:mathi@specgrid.in" class="btn btn-primary">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+              </svg>
+              mathi@specgrid.in
+            </a>
+          </div>
+        </section>
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .doc-page {
+    padding: 56px 0 72px;
+  }
+
+  .doc-header {
+    margin-bottom: 40px;
+    border-bottom: 1px solid var(--paper-line);
+    padding-bottom: 32px;
+  }
+
+  .doc-title {
+    font-size: clamp(32px, 4.5vw, 44px);
+    line-height: 1.1;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+
+  .doc-meta {
+    font-size: 12px;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 16px;
+  }
+
+  .doc-lead {
+    font-size: 17px;
+    color: var(--ink-soft);
+    max-width: 680px;
+    line-height: 1.6;
+  }
+
+  .doc-lead strong {
+    color: var(--ink);
+  }
+
+  .doc-content {
+    max-width: 720px;
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+  }
+
+  .doc-section {
+    position: relative;
+  }
+
+  .section-tag {
+    font-size: 11px;
+    color: var(--green);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .doc-section h2 {
+    font-size: 19px;
+    margin-bottom: 14px;
+    letter-spacing: -0.01em;
+  }
+
+  .doc-section p {
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    line-height: 1.75;
+  }
+
+  .tiers-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .tier-card {
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    padding: 18px 20px;
+    border-radius: var(--radius);
+  }
+
+  .tier-card p {
+    margin: 0;
+  }
+
+  .doc-link {
+    color: var(--green-deep);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-weight: 500;
+  }
+
+  .contact-panel {
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    padding: 24px 28px;
+    border-radius: var(--radius);
+  }
+</style>

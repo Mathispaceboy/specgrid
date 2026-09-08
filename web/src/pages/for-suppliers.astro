@@ -1,0 +1,707 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const faqs = [
+  {
+    q: "What if I'm already on IndiaMART?",
+    a: "SpecGrid isn't a replacement for IndiaMART — it's a different kind of listing. Buyers here search by exact technical spec (voltage class, IP rating, certification), not by ad spend, and your enquiry goes straight to you without being resold to competitors."
+  },
+  {
+    q: "Why pay if I'm already listed free?",
+    a: "A draft profile is free and stays free — being found costs nothing. The founding member tier is for companies that want priority placement in their category and access to buyer-intent data (what buyers are searching for, before they enquire)."
+  },
+  {
+    q: "Who can see my contact details?",
+    a: "Never the public. Contact information is never shown on a public page — buyers submit an enquiry through SpecGrid, and it's routed to you directly. You choose how and whether to respond."
+  },
+  {
+    q: "Can I remove my profile?",
+    a: "Yes. Every draft profile was compiled from publicly available information (your own site, public directories). Claim it to edit or correct it, or email us and we'll remove it — no questions asked."
+  },
+  {
+    q: "What if the data is wrong?",
+    a: "Common with any directory built from public sources. Claim your profile to fix it directly, or email mathi@specgrid.in with the correction and we'll update it, usually within a day."
+  }
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqs.map(f => ({
+    "@type": "Question",
+    "name": f.q,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": f.a
+    }
+  }))
+};
+
+const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
+---
+
+<BaseLayout
+  title="For Suppliers — List Your Manufacturing Company on SpecGrid"
+  description="Claim your free SpecGrid profile. Buyers search by exact spec, not ad spend — no lead reselling, no competitor links, direct enquiry routing."
+  canonicalPath="/for-suppliers"
+  jsonLd={faqJsonLd}
+>
+  <div class="suppliers-page">
+    <!-- Hero Section -->
+    <section class="supp-hero">
+      <div class="wrap">
+        <div class="titleblock" style="margin-bottom: 28px;">
+          <div>Program<strong>Founding Manufacturer Index</strong></div>
+          <div>Location<strong>Coimbatore &amp; South India Cluster</strong></div>
+          <div>Listing<strong>Direct &middot; No Lead Reselling</strong></div>
+          <div>Model<strong>Verified Technical Specifications</strong></div>
+        </div>
+
+        <div class="tag" style="margin-bottom: 16px;">
+          <span class="dot"></span>
+          <span>For Manufacturers &amp; Technical Suppliers</span>
+        </div>
+
+        <h1 class="supp-title">Your specs are invisible to the buyers who matter.</h1>
+        <p class="supp-lead">
+          Buyers searching for &ldquo;36kV VCB, IEC type-tested, Coimbatore&rdquo; don't find you on generic directories built for ad spend, not accuracy. SpecGrid indexes what you actually make.
+        </p>
+
+        <div class="supp-cta-group">
+          <a
+            class="btn btn-primary"
+            href="mailto:mathi@specgrid.in?subject=Claim%20my%20SpecGrid%20profile"
+          >
+            Claim your profile &rarr;
+          </a>
+          <a href="#how" class="btn btn-ghost">How it works &darr;</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section class="supp-sec">
+      <div class="wrap">
+        <div class="divider">Market Distortion</div>
+        <div class="sec-header">
+          <h2>The problem with directories built for lead volume</h2>
+          <p class="sec-lead">
+            Most B2B directories in India optimize for one thing: selling your enquiry to as many people as possible, including your competitors.
+          </p>
+        </div>
+
+        <div class="pain-grid">
+          <div class="pain-card">
+            <div class="pain-num mono">01</div>
+            <h3>Lead quality</h3>
+            <p>
+              Generic enquiry forms don't tell you if the buyer actually needs what you make, or is a student project, or a reseller fishing for a quote to shop around.
+            </p>
+          </div>
+
+          <div class="pain-card">
+            <div class="pain-num mono">02</div>
+            <h3>Lead reselling</h3>
+            <p>
+              The same enquiry is often sold to multiple listed suppliers at once — you're one of five quotes on a request that never mentioned you specifically.
+            </p>
+          </div>
+
+          <div class="pain-card">
+            <div class="pain-num mono">03</div>
+            <h3>No spec filtering</h3>
+            <p>
+              Buyers can't filter by voltage class, IP rating, or certification — so you're competing on listing position and ad spend, not on what you can actually build.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Already Listed / Comparison Section -->
+    <section class="supp-sec">
+      <div class="wrap">
+        <div class="divider">Profile Control</div>
+        <div class="sec-header">
+          <h2>Your company is already listed</h2>
+          <p class="sec-lead">
+            We compile a first draft of every manufacturer's profile from public information — your own website, public catalogs, and industry listings — before ever reaching out. It's live now, whether you've claimed it or not.
+          </p>
+        </div>
+
+        <div class="compare-grid">
+          <!-- Draft Card -->
+          <div class="compare-card bad">
+            <div class="card-header-bar">
+              <span class="badge badge-draft">Draft (Unclaimed)</span>
+            </div>
+            <ul class="compare-list">
+              <li>&ldquo;Unclaimed profile&rdquo; badge shown to buyers</li>
+              <li>Specs limited to what's publicly listed</li>
+              <li>No control over description or details</li>
+              <li>Enquiries still route to you, but you can't verify the listing is accurate</li>
+            </ul>
+          </div>
+
+          <!-- Claimed Card -->
+          <div class="compare-card good">
+            <div class="card-header-bar">
+              <span class="badge badge-verified">Claimed &amp; Verified</span>
+            </div>
+            <ul class="compare-list">
+              <li>&ldquo;Verified&rdquo; badge — buyers trust it more</li>
+              <li>Full control: specs, certifications, description</li>
+              <li>No competitor links or ads anywhere on your page</li>
+              <li>WhatsApp / direct enquiry routing, your choice</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Search / AI Citation Mockup Section -->
+    <section class="supp-sec">
+      <div class="wrap">
+        <div class="divider">Modern Procurement</div>
+        <div class="sec-header">
+          <h2>Built for how buyers actually search now</h2>
+          <p class="sec-lead">
+            Increasingly, buyers ask ChatGPT or Perplexity before they search Google. Structured, specific profiles are what get cited back.
+          </p>
+        </div>
+
+        <div class="mockup-container">
+          <div class="mockup-box">
+            <div class="mockup-header mono">
+              <span class="dot-red"></span>
+              <span class="dot-yellow"></span>
+              <span class="dot-green"></span>
+              <span class="mockup-title">Buyer AI Query &middot; Citation Engine</span>
+            </div>
+            <div class="mockup-body">
+              <div class="mockup-prompt mono">
+                &ldquo;who makes 36kV vacuum circuit breakers in Coimbatore with ISO certification&rdquo;
+              </div>
+              <div class="mockup-response">
+                Based on available directories, manufacturers include companies specializing in AIS and VCB panel systems tested to IEC standards in the Coimbatore–Salem industrial cluster...
+                <div class="citation-tag mono">cited: specgrid.in</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Buyer Intent Intelligence Section -->
+    <section class="supp-sec">
+      <div class="wrap">
+        <div class="divider">Live Analytics</div>
+        <div class="sec-header">
+          <h2>Know who's searching for what you make</h2>
+          <p class="sec-lead">
+            Founding members get visibility into buyer intent on SpecGrid — before an enquiry is even submitted.
+          </p>
+        </div>
+
+        <div class="intel-card">
+          <div class="intel-stat-box">
+            <div class="intel-stat mono" id="intelStat">&hellip;</div>
+            <div class="intel-sub mono">Verified Buyer Activity</div>
+          </div>
+          <p class="intel-label" id="intelLabel">Loading real search activity&hellip;</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Founding Member Quota Section -->
+    <section class="supp-sec">
+      <div class="wrap">
+        <div class="founding-panel">
+          <div class="founding-info">
+            <div class="tag" style="margin-bottom: 12px;">
+              <span class="dot"></span>
+              <span>Priority Placement &middot; Locked Permanently</span>
+            </div>
+            <h2>Founding member &mdash; first 25 companies</h2>
+            <div class="founding-metrics">
+              <div class="founding-num mono" id="foundingCount">25</div>
+              <p class="founding-desc" id="foundingLabel">
+                founding spots available &mdash; priority placement in your category, locked in permanently for early members.
+              </p>
+            </div>
+          </div>
+
+          <div class="founding-cta">
+            <a
+              class="btn btn-primary"
+              href="mailto:mathi@specgrid.in?subject=SpecGrid%20founding%20member%20%E2%80%94%20interested"
+              id="foundingCtaBtn"
+            >
+              Get founding pricing &rarr;
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="supp-sec" id="faq">
+      <div class="wrap">
+        <div class="divider">Questions &amp; Details</div>
+        <div class="sec-header">
+          <h2>Frequently asked</h2>
+        </div>
+
+        <div class="faq-list">
+          {faqs.map(item => (
+            <details class="faq-item">
+              <summary class="faq-summary">
+                <span>{item.q}</span>
+                <span class="faq-icon mono">+</span>
+              </summary>
+              <div class="faq-answer">
+                <p>{item.a}</p>
+              </div>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- Final CTA Section -->
+    <section class="supp-sec final-cta-sec">
+      <div class="wrap text-center">
+        <h2>Ready to see your profile?</h2>
+        <p class="sec-lead" style="margin: 8px auto 24px;">
+          Takes under a minute &mdash; reply with your company name or claim directly.
+        </p>
+        <a
+          class="btn btn-primary"
+          href="mailto:mathi@specgrid.in?subject=Claim%20my%20SpecGrid%20profile"
+        >
+          Claim your profile &rarr;
+        </a>
+        <div class="final-links mono">
+          <a href="/terms">Terms</a> &middot;
+          <a href="/privacy">Privacy</a> &middot;
+          <a href="/data-disclaimer">Data Disclaimer</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<script is:inline define:vars={{ API_BASE }}>
+  // Wire dynamic stats and founding member count
+  (function(){
+    // Fetch public search intent stats
+    fetch(API_BASE + "/api/public-stats")
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        var statEl = document.getElementById("intelStat");
+        var lblEl = document.getElementById("intelLabel");
+        if (!statEl || !lblEl) return;
+
+        if (!d.totalSearches) {
+          statEl.textContent = "Early days";
+          lblEl.textContent = "SpecGrid is still building up search volume — founding members get this same live view, scoped to their own category, from day one.";
+          return;
+        }
+
+        statEl.textContent = d.uniqueSearchers + " buyer" + (d.uniqueSearchers === 1 ? "" : "s");
+        var lbl = d.totalSearches + " search" + (d.totalSearches === 1 ? "" : "es") + " on SpecGrid in the last " + d.days + " days";
+        if (d.topQuery) lbl += ', most commonly for "' + d.topQuery + '"';
+        lbl += " — a real, live number. Founding members see this broken down for their own category.";
+        lblEl.textContent = lbl;
+      })
+      .catch(function(){
+        var lblEl = document.getElementById("intelLabel");
+        if (lblEl) lblEl.textContent = "Live search data is temporarily unavailable.";
+      });
+
+    // Fetch founding member count
+    fetch(API_BASE + "/api/founding-count")
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        var countEl = document.getElementById("foundingCount");
+        var lblEl = document.getElementById("foundingLabel");
+        if (!countEl || !lblEl) return;
+
+        countEl.textContent = d.remaining;
+        lblEl.textContent = (d.remaining === 0 ? "founding spots — all claimed for now. " : "founding spots left of " + d.cap + " — ") + "priority placement in your category, locked in permanently for early members.";
+      })
+      .catch(function(){});
+
+    // Wire founding CTA click tracking
+    var ctaBtn = document.getElementById("foundingCtaBtn");
+    if (ctaBtn) {
+      ctaBtn.addEventListener("click", function(){
+        try {
+          if (window.__sg && window.__sg.track) {
+            window.__sg.track("founding_cta_click");
+          }
+        } catch(e) {}
+      });
+    }
+  })();
+</script>
+
+<style>
+  .suppliers-page {
+    padding-bottom: 40px;
+  }
+
+  .supp-hero {
+    padding: 64px 0 48px;
+    border-bottom: 1px solid var(--paper-line);
+  }
+
+  .supp-title {
+    font-size: clamp(34px, 5.2vw, 52px);
+    line-height: 1.08;
+    max-width: 820px;
+    margin-bottom: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .supp-lead {
+    font-size: 18px;
+    color: var(--ink-soft);
+    max-width: 640px;
+    line-height: 1.6;
+    margin-bottom: 32px;
+  }
+
+  .supp-cta-group {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .supp-sec {
+    padding: 48px 0;
+    border-bottom: 1px solid var(--paper-line);
+  }
+
+  .sec-header {
+    margin-bottom: 28px;
+  }
+
+  .sec-header h2 {
+    font-size: 26px;
+    letter-spacing: -0.01em;
+    margin-bottom: 8px;
+  }
+
+  .sec-lead {
+    font-size: 15.5px;
+    color: var(--ink-soft);
+    max-width: 660px;
+    line-height: 1.6;
+  }
+
+  /* Pain Cards */
+  .pain-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .pain-card {
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    padding: 24px;
+    border-radius: var(--radius);
+    position: relative;
+  }
+
+  .pain-num {
+    font-size: 12px;
+    color: var(--copper);
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  .pain-card h3 {
+    font-size: 17px;
+    margin-bottom: 10px;
+  }
+
+  .pain-card p {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.65;
+  }
+
+  /* Compare Grid */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+  }
+
+  .compare-card {
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    padding: 24px;
+    border-radius: var(--radius);
+  }
+
+  .compare-card.bad {
+    background: #FAF8F6;
+    border-color: #E8DFD8;
+  }
+
+  .compare-card.good {
+    background: #F4F8F5;
+    border-color: #CDE2D5;
+  }
+
+  .card-header-bar {
+    margin-bottom: 16px;
+  }
+
+  .compare-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .compare-list li {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    position: relative;
+    padding-left: 18px;
+  }
+
+  .compare-list li::before {
+    content: "—";
+    position: absolute;
+    left: 0;
+    color: var(--ink-faint);
+  }
+
+  .compare-card.good .compare-list li::before {
+    content: "✓";
+    color: var(--green);
+    font-weight: bold;
+  }
+
+  /* AI Mockup Box */
+  .mockup-container {
+    max-width: 640px;
+  }
+
+  .mockup-box {
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(20, 36, 46, 0.04);
+  }
+
+  .mockup-header {
+    background: #E8EBE5;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--paper-line);
+  }
+
+  .dot-red, .dot-yellow, .dot-green {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .dot-red { background: #E06C75; }
+  .dot-yellow { background: #E5C07B; }
+  .dot-green { background: #98C379; }
+
+  .mockup-title {
+    margin-left: 6px;
+  }
+
+  .mockup-body {
+    padding: 22px;
+  }
+
+  .mockup-prompt {
+    font-size: 13px;
+    background: var(--paper);
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    margin-bottom: 14px;
+    color: var(--ink);
+    border-left: 3px solid var(--green);
+  }
+
+  .mockup-response {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.65;
+  }
+
+  .citation-tag {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 11.5px;
+    background: var(--green);
+    color: #fff;
+    padding: 3px 8px;
+    border-radius: var(--radius);
+    font-weight: 500;
+  }
+
+  /* Intel Card */
+  .intel-card {
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 28px;
+    max-width: 640px;
+  }
+
+  .intel-stat-box {
+    margin-bottom: 12px;
+  }
+
+  .intel-stat {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--green-deep);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .intel-sub {
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .intel-label {
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+
+  /* Founding Member Panel */
+  .founding-panel {
+    border: 1.5px solid var(--green);
+    background: var(--green-soft);
+    border-radius: var(--radius);
+    padding: 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 28px;
+    flex-wrap: wrap;
+  }
+
+  .founding-info h2 {
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
+
+  .founding-metrics {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .founding-num {
+    font-size: 40px;
+    font-weight: 700;
+    color: var(--green-deep);
+    line-height: 1;
+  }
+
+  .founding-desc {
+    font-size: 14px;
+    color: var(--ink-soft);
+    max-width: 480px;
+    line-height: 1.5;
+  }
+
+  /* FAQ Accordion */
+  .faq-list {
+    max-width: 760px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .faq-item {
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .faq-summary {
+    padding: 16px 20px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+  }
+
+  .faq-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-icon {
+    font-size: 16px;
+    color: var(--ink-faint);
+    transition: transform 0.2s ease;
+  }
+
+  .faq-item[open] .faq-icon {
+    transform: rotate(45deg);
+  }
+
+  .faq-answer {
+    padding: 0 20px 18px;
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.65;
+  }
+
+  /* Final CTA */
+  .final-cta-sec {
+    border-bottom: none;
+    padding: 56px 0 24px;
+  }
+
+  .text-center {
+    text-align: center;
+  }
+
+  .final-links {
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin-top: 24px;
+  }
+
+  .final-links a {
+    color: var(--ink-soft);
+    transition: color 0.15s ease;
+  }
+
+  .final-links a:hover {
+    color: var(--ink);
+  }
+</style>

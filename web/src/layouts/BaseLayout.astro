@@ -1,0 +1,158 @@
+---
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/design-tokens.css';
+
+interface Props {
+  title: string;
+  description: string;
+  canonicalPath?: string;
+  ogImage?: string;
+  jsonLd?: Record<string, any> | null;
+  noindex?: boolean;
+}
+
+const {
+  title,
+  description,
+  canonicalPath = "",
+  ogImage,
+  jsonLd,
+  noindex = false,
+} = Astro.props;
+
+const SITE_URL = "https://specgrid.in";
+const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
+const canonicalUrl = `${SITE_URL}${canonicalPath.startsWith("/") ? canonicalPath : "/" + canonicalPath}`;
+const finalOgImage = ogImage || `${SITE_URL}/og-default.png`;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title}</title>
+  <meta name="description" content={description}>
+  <link rel="canonical" href={canonicalUrl}>
+
+  {noindex && <meta name="robots" content="noindex, nofollow">}
+
+  <!-- Open Graph / Social Media -->
+  <meta property="og:title" content={title}>
+  <meta property="og:description" content={description}>
+  <meta property="og:type" content="website">
+  <meta property="og:url" content={canonicalUrl}>
+  <meta property="og:image" content={finalOgImage}>
+  <meta property="og:site_name" content="SpecGrid">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content={title}>
+  <meta name="twitter:description" content={description}>
+  <meta name="twitter:image" content={finalOgImage}>
+
+  <!-- JSON-LD Structured Data -->
+  {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+
+  <!-- First-Party Analytics & Attribution Bootstrap (Preserving P8/P8B Continuity) -->
+  <script is:inline define:vars={{ API_BASE }}>
+    (function(){
+      function uuid(){
+        try{return crypto.randomUUID();}
+        catch(e){
+          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){
+            var r=Math.random()*16|0,v=c=='x'?r:(r&0x3|0x8);
+            return v.toString(16);
+          });
+        }
+      }
+      function getCookie(name){
+        var m=document.cookie.match(new RegExp('(?:^|; )'+name+'=([^;]+)'));
+        return m?decodeURIComponent(m[1]):null;
+      }
+      function setCookie(name,value,maxAgeSeconds){
+        document.cookie=name+'='+encodeURIComponent(value)+';path=/;max-age='+maxAgeSeconds+';SameSite=Lax';
+      }
+
+      var vid = getCookie('sg_vid');
+      if(!vid){ vid = uuid(); setCookie('sg_vid', vid, 63072000); }
+      else { setCookie('sg_vid', vid, 63072000); }
+
+      var sid = sessionStorage.getItem('sg_sid');
+      var isNewSession = false;
+      if(!sid){ sid = uuid(); sessionStorage.setItem('sg_sid', sid); isNewSession = true; }
+      setCookie('sg_sid', sid, 1800);
+
+      window.__sg = {
+        visitorId: vid,
+        sessionId: sid,
+        track: function(eventType, companySlug, meta){
+          try{
+            fetch(API_BASE + "/api/track", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                eventType: eventType,
+                companySlug: companySlug || null,
+                meta: meta || null,
+                visitorId: vid,
+                sessionId: sid,
+                path: location.pathname
+              })
+            });
+          }catch(e){}
+        },
+        identify: function(email){
+          if(!email) return;
+          if(sessionStorage.getItem('sg_identified') === email) return;
+          try{
+            fetch(API_BASE + "/api/identify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ visitorId: vid, email: email })
+            });
+            sessionStorage.setItem('sg_identified', email);
+          }catch(e){}
+        }
+      };
+
+      if(isNewSession){
+        var params = new URLSearchParams(location.search);
+        try{
+          fetch(API_BASE + "/api/session/start", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              sessionId: sid,
+              visitorId: vid,
+              landingPage: location.pathname,
+              referrer: document.referrer || null,
+              utmSource: params.get("utm_source"),
+              utmMedium: params.get("utm_medium"),
+              utmCampaign: params.get("utm_campaign"),
+              utmTerm: params.get("utm_term"),
+              utmContent: params.get("utm_content")
+            })
+          });
+        }catch(e){}
+      }
+    })();
+  </script>
+</head>
+<body>
+  <Header activePath={canonicalPath} />
+  <main id="main-content" class="site-main">
+    <slot />
+  </main>
+  <Footer />
+</body>
+</html>
+
+<style>
+  .site-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+</style>

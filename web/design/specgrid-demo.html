@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SpecGrid — India's Technical Capability Directory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14242E;
+    --ink-soft:#3C4E58;
+    --paper:#ECEEEA;
+    --paper-line:#D7DBD3;
+    --card:#FFFFFF;
+    --green:#1F6F4A;
+    --green-soft:#E4F0E9;
+    --amber:#E2A33B;
+    --amber-deep:#B97A1E;
+    --copper:#A8532E;
+    --radius:2px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    line-height:1.5;
+    background-image:
+      linear-gradient(var(--paper-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
+    background-size:28px 28px;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif;font-weight:600;letter-spacing:-0.01em;color:var(--ink);}
+  a{color:inherit;text-decoration:none;}
+  img{max-width:100%;display:block;}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px;}
+
+  /* Title-block tag, used throughout as the signature motif */
+  .tag{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.06em;
+    color:var(--ink-soft);text-transform:uppercase;
+    border:1px solid var(--paper-line);
+    background:var(--card);
+    padding:4px 9px;
+    border-radius:var(--radius);
+  }
+  .tag .dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+
+  /* ---------- Header ---------- */
+  header{
+    position:sticky;top:0;z-index:50;
+    background:rgba(236,238,234,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--paper-line);
+  }
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{
+    width:30px;height:30px;border:1.5px solid var(--ink);border-radius:var(--radius);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:13px;
+    background:var(--ink);color:var(--paper);
+  }
+  .brand-name{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;}
+  .brand-name span{color:var(--green);}
+  .nav-links{list-style:none;display:flex;gap:28px;}
+  .nav-links a{font-size:14px;font-weight:500;color:var(--ink-soft);}
+  .nav-links a:hover{color:var(--ink);}
+  .nav-cta{
+    font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:500;
+    background:var(--ink);color:var(--paper);
+    padding:9px 16px;border-radius:var(--radius);
+    letter-spacing:0.02em;
+  }
+  .nav-links, .nav-cta{display:flex;}
+  @media(max-width:720px){ .nav-links{display:none;} }
+
+  /* ---------- Hero ---------- */
+  .hero{padding:72px 0 56px;}
+  .titleblock{
+    display:flex;flex-wrap:wrap;gap:0;
+    border:1px solid var(--ink);
+    max-width:560px;margin-bottom:34px;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;
+  }
+  .titleblock div{
+    padding:7px 12px;border-right:1px solid var(--ink);
+    color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.05em;
+  }
+  .titleblock div:last-child{border-right:none;}
+  .titleblock strong{color:var(--ink);display:block;font-size:11.5px;margin-top:1px;}
+  .hero h1{
+    font-size:clamp(34px,5.4vw,58px);
+    line-height:1.05;
+    max-width:820px;
+  }
+  .hero h1 em{font-style:normal;color:var(--green);}
+  .hero p.lede{
+    font-size:18px;color:var(--ink-soft);max-width:600px;margin-top:20px;
+  }
+  .hero-ctas{display:flex;gap:14px;margin-top:32px;flex-wrap:wrap;}
+  .btn{
+    font-family:'IBM Plex Mono',monospace;font-size:13.5px;font-weight:500;
+    padding:13px 22px;border-radius:var(--radius);letter-spacing:0.01em;
+    display:inline-flex;align-items:center;gap:8px;
+    border:1px solid var(--ink);
+  }
+  .btn-primary{background:var(--amber);color:var(--ink);border-color:var(--amber-deep);}
+  .btn-primary:hover{background:var(--amber-deep);}
+  .btn-ghost{background:transparent;color:var(--ink);}
+  .btn-ghost:hover{background:var(--card);}
+
+  .divider{
+    display:flex;align-items:center;gap:10px;color:var(--ink-soft);
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;
+    margin:0 0 26px;
+  }
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--paper-line);}
+  .divider::before{background-image:linear-gradient(to right, var(--ink-soft) 1px, transparent 1px);background-size:5px 1px;}
+  .divider::after{background-image:linear-gradient(to right, var(--ink-soft) 1px, transparent 1px);background-size:5px 1px;}
+
+  section{padding:56px 0;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--green);
+    text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;font-weight:600;
+  }
+  .sec-title{font-size:clamp(24px,3vw,34px);max-width:640px;}
+  .sec-sub{color:var(--ink-soft);max-width:560px;margin-top:10px;font-size:15.5px;}
+
+  /* ---------- Comparison ---------- */
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:32px;}
+  @media(max-width:760px){.compare{grid-template-columns:1fr;}}
+  .compare-col{border:1px solid var(--paper-line);background:var(--card);border-radius:var(--radius);overflow:hidden;}
+  .compare-col.bad{opacity:0.82;}
+  .compare-head{
+    padding:14px 18px;border-bottom:1px solid var(--paper-line);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:0.05em;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .compare-col.bad .compare-head{background:#F4F1EC;color:var(--ink-soft);}
+  .compare-col.good .compare-head{background:var(--green-soft);color:var(--green);font-weight:600;}
+  .compare-body{padding:20px 18px;}
+  .old-listing-name{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;margin-bottom:4px;}
+  .old-listing-meta{color:var(--ink-soft);font-size:13px;margin-bottom:14px;}
+  .old-cta{
+    display:inline-block;background:#DDD8CB;color:#6B6555;
+    font-size:12px;padding:7px 12px;border-radius:2px;font-family:'IBM Plex Mono',monospace;
+  }
+  .spec-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--paper-line);font-size:13.5px;}
+  .spec-row:last-of-type{border-bottom:none;}
+  .spec-row .k{color:var(--ink-soft);}
+  .spec-row .v{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--ink);}
+  .good-name{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;margin-bottom:2px;}
+  .verified{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--green);font-family:'IBM Plex Mono',monospace;margin-bottom:14px;}
+  .verified .dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+
+  /* ---------- Sample directory ---------- */
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin:28px 0 26px;}
+  .filter-btn{
+    font-family:'IBM Plex Mono',monospace;font-size:12.5px;
+    border:1px solid var(--paper-line);background:var(--card);color:var(--ink-soft);
+    padding:8px 14px;border-radius:var(--radius);cursor:pointer;
+  }
+  .filter-btn.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:600px){.grid{grid-template-columns:1fr;}}
+  .spec-card{
+    background:var(--card);border:1px solid var(--paper-line);border-radius:var(--radius);
+    padding:18px;display:flex;flex-direction:column;
+  }
+  .spec-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+  .spec-card-id{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--copper);}
+  .sample-flag{
+    font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:0.06em;
+    background:var(--amber);color:var(--ink);padding:2px 6px;border-radius:2px;text-transform:uppercase;
+  }
+  .spec-card h4{font-family:'Space Grotesk',sans-serif;font-size:16px;margin-bottom:2px;}
+  .spec-card .loc{font-size:12.5px;color:var(--ink-soft);margin-bottom:12px;}
+  .spec-card .spec-row{font-size:12.5px;padding:5px 0;}
+
+  /* ---------- Steps ---------- */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:30px;}
+  @media(max-width:760px){.steps{grid-template-columns:1fr;}}
+  .step{border-left:2px solid var(--green);padding-left:18px;}
+  .step-num{font-family:'IBM Plex Mono',monospace;color:var(--green);font-size:13px;margin-bottom:8px;}
+  .step h4{font-size:17px;margin-bottom:6px;}
+  .step p{font-size:13.8px;color:var(--ink-soft);}
+
+  /* ---------- CTA band ---------- */
+  .cta-band{
+    background:var(--ink);color:var(--paper);border-radius:4px;
+    padding:44px 36px;margin:60px 0 20px;
+    display:flex;justify-content:space-between;align-items:center;gap:30px;flex-wrap:wrap;
+    background-image:linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size:24px 24px;
+  }
+  .cta-band h3{color:var(--paper);font-size:26px;max-width:480px;}
+  .cta-band p{color:#B7C2C7;font-size:14px;margin-top:8px;max-width:440px;}
+  .cta-band .btn-primary{border-color:var(--amber-deep);}
+
+  footer{border-top:1px solid var(--paper-line);padding:28px 0 40px;margin-top:20px;}
+  .foot-row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--ink-soft);}
+  .foot-row .mono{color:var(--ink-soft);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <div class="brand">
+      <div class="brand-mark">SG</div>
+      <div class="brand-name">Spec<span>Grid</span></div>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#compare">Why not IndiaMART</a></li>
+      <li><a href="#directory">Sample profiles</a></li>
+      <li><a href="#how">How it works</a></li>
+    </ul>
+    <a href="#list" class="nav-cta">List your company →</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="titleblock">
+      <div>Doc <strong>SPECGRID&#8209;01</strong></div>
+      <div>Rev <strong>A</strong></div>
+      <div>Sector <strong>Electrical &amp; Electronics</strong></div>
+      <div>Region <strong>Coimbatore, TN</strong></div>
+      <div>Status <strong style="color:#1F6F4A;">Live</strong></div>
+    </div>
+    <h1>Your machines have specs.<br><em>Your listing should too.</em></h1>
+    <p class="lede">SpecGrid is a free technical directory for electrical &amp; electronics manufacturers. Buyers filter by voltage class, current rating, IP rating and certification — not just a company name and a phone number.</p>
+    <div class="hero-ctas">
+      <a href="#list" class="btn btn-primary">List your company — free →</a>
+      <a href="#directory" class="btn btn-ghost">See sample profiles</a>
+    </div>
+  </div>
+</section>
+
+<section id="compare">
+  <div class="wrap">
+    <div class="divider">The problem</div>
+    <div class="eyebrow">Same factory, two listings</div>
+    <h2 class="sec-title">IndiaMART shows a name. It never shows what you can build.</h2>
+    <p class="sec-sub">A buyer searching for "LT panel manufacturer Coimbatore" gets ten identical-looking cards and no way to tell who actually makes what they need. So they call all ten, and you compete on price alone.</p>
+
+    <div class="compare">
+      <div class="compare-col bad">
+        <div class="compare-head">Generic directory listing</div>
+        <div class="compare-body">
+          <div class="old-listing-name">XYZ Electricals</div>
+          <div class="old-listing-meta">Coimbatore, Tamil Nadu · Manufacturer</div>
+          <div class="spec-row"><span class="k">Products</span><span class="v">Panels, switchgear</span></div>
+          <div class="spec-row"><span class="k">Rating</span><span class="v">4.2 ★ (11)</span></div>
+          <div class="spec-row"><span class="k">Response</span><span class="v">Usually within a day</span></div>
+          <div style="margin-top:14px;"><span class="old-cta">Get Best Price →</span></div>
+        </div>
+      </div>
+      <div class="compare-col good">
+        <div class="compare-head"><span>SpecGrid profile</span><span class="mono" style="font-size:11px;">SPEC&#8209;0412</span></div>
+        <div class="compare-body">
+          <div class="good-name">Kaveri Switchgear Works</div>
+          <div class="verified"><span class="dot"></span>Verified · Peelamedu, Coimbatore</div>
+          <div class="spec-row"><span class="k">Panel type</span><span class="v">LT PCC / MCC</span></div>
+          <div class="spec-row"><span class="k">Current rating</span><span class="v">up to 4000 A</span></div>
+          <div class="spec-row"><span class="k">IP rating</span><span class="v">IP54 / IP65</span></div>
+          <div class="spec-row"><span class="k">Busbar</span><span class="v">Copper, tin-plated</span></div>
+          <div class="spec-row"><span class="k">Certification</span><span class="v">ISO 9001, Type-tested</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="directory">
+  <div class="wrap">
+    <div class="divider">Illustrative only</div>
+    <div class="eyebrow">Sample directory</div>
+    <h2 class="sec-title">What a searchable spec sheet looks like</h2>
+    <p class="sec-sub">These are sample profiles built to show the format — not live company listings. Your real profile is built from your actual catalog in about 10 minutes.</p>
+
+    <div class="filters" id="filters">
+      <button class="filter-btn active" data-f="all">All</button>
+      <button class="filter-btn" data-f="transformers">Transformers</button>
+      <button class="filter-btn" data-f="switchgear">Switchgear &amp; Panels</button>
+      <button class="filter-btn" data-f="solar">Solar &amp; Storage</button>
+      <button class="filter-btn" data-f="ev">EV &amp; Charging</button>
+    </div>
+
+    <div class="grid" id="grid">
+
+      <div class="spec-card" data-cat="transformers">
+        <div class="spec-card-top"><span class="spec-card-id">SPEC&#8209;0108</span><span class="sample-flag">Sample</span></div>
+        <h4>Noyyal Power Transformers</h4>
+        <div class="loc">Ganapathy, Coimbatore</div>
+        <div class="spec-row"><span class="k">Type</span><span class="v">Cast resin, dry-type</span></div>
+        <div class="spec-row"><span class="k">Rating</span><span class="v">100 – 2500 kVA</span></div>
+        <div class="spec-row"><span class="k">Voltage class</span><span class="v">11 / 33 kV</span></div>
+        <div class="spec-row"><span class="k">Efficiency</span><span class="v">Class A0 / Bk</span></div>
+      </div>
+
+      <div class="spec-card" data-cat="switchgear">
+        <div class="spec-card-top"><span class="spec-card-id">SPEC&#8209;0412</span><span class="sample-flag">Sample</span></div>
+        <h4>Kaveri Switchgear Works</h4>
+        <div class="loc">Peelamedu, Coimbatore</div>
+        <div class="spec-row"><span class="k">Panel type</span><span class="v">LT PCC / MCC</span></div>
+        <div class="spec-row"><span class="k">Current rating</span><span class="v">up to 4000 A</span></div>
+        <div class="spec-row"><span class="k">IP rating</span><span class="v">IP54 / IP65</span></div>
+        <div class="spec-row"><span class="k">Certification</span><span class="v">ISO 9001</span></div>
+      </div>
+
+      <div class="spec-card" data-cat="solar">
+        <div class="spec-card-top"><span class="spec-card-id">SPEC&#8209;0561</span><span class="sample-flag">Sample</span></div>
+        <h4>Bharani Solar Systems</h4>
+        <div class="loc">Kurichi, Coimbatore</div>
+        <div class="spec-row"><span class="k">Type</span><span class="v">String inverter</span></div>
+        <div class="spec-row"><span class="k">Capacity</span><span class="v">5 – 100 kW</span></div>
+        <div class="spec-row"><span class="k">Peak efficiency</span><span class="v">98.4%</span></div>
+        <div class="spec-row"><span class="k">Certification</span><span class="v">BIS, IEC 62109</span></div>
+      </div>
+
+      <div class="spec-card" data-cat="ev">
+        <div class="spec-card-top"><span class="spec-card-id">SPEC&#8209;0733</span><span class="sample-flag">Sample</span></div>
+        <h4>Amaravathi EV Components</h4>
+        <div class="loc">Arasur, Coimbatore</div>
+        <div class="spec-row"><span class="k">Charger type</span><span class="v">DC fast charger</span></div>
+        <div class="spec-row"><span class="k">Power output</span><span class="v">30 – 120 kW</span></div>
+        <div class="spec-row"><span class="k">Connector</span><span class="v">CCS2 / GB/T</span></div>
+        <div class="spec-row"><span class="k">Protocol</span><span class="v">OCPP 1.6J</span></div>
+      </div>
+
+      <div class="spec-card" data-cat="switchgear">
+        <div class="spec-card-top"><span class="spec-card-id">SPEC&#8209;0389</span><span class="sample-flag">Sample</span></div>
+        <h4>Vaigai Control Panels</h4>
+        <div class="loc">Kuniyamuthur, Coimbatore</div>
+        <div class="spec-row"><span class="k">Panel type</span><span class="v">PLC / automation</span></div>
+        <div class="spec-row"><span class="k">Enclosure</span><span class="v">Mild steel, powder-coated</span></div>
+        <div class="spec-row"><span class="k">IP rating</span><span class="v">IP42 / IP55</span></div>
+        <div class="spec-row"><span class="k">Certification</span><span class="v">CE, UL508A</span></div>
+      </div>
+
+      <div class="spec-card" data-cat="transformers">
+        <div class="spec-card-top"><span class="spec-card-id">SPEC&#8209;0217</span><span class="sample-flag">Sample</span></div>
+        <h4>Siruvani Windings &amp; Motors</h4>
+        <div class="loc">Sulur, Coimbatore</div>
+        <div class="spec-row"><span class="k">Type</span><span class="v">Induction motor rewinding</span></div>
+        <div class="spec-row"><span class="k">Power range</span><span class="v">0.5 – 500 HP</span></div>
+        <div class="spec-row"><span class="k">Insulation class</span><span class="v">Class F / H</span></div>
+        <div class="spec-row"><span class="k">Balancing</span><span class="v">Dynamic, ISO 21940</span></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="divider">Process</div>
+    <div class="eyebrow">How it works</div>
+    <h2 class="sec-title">From catalog to live profile in about 10 minutes</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h4>Send your spec sheet</h4>
+        <p>Share a product catalog, datasheet, or just talk us through what you make — voltage classes, ratings, certifications.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h4>We build your profile</h4>
+        <p>Your capabilities go live as a structured, filterable spec sheet — not a wall of text. You review before it's public.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h4>Buyers find you by spec</h4>
+        <p>Enquiries reach you because your IP rating, current rating, or certification matched — not because you outbid a competitor.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="list">
+  <div class="wrap">
+    <div class="cta-band">
+      <div>
+        <h3>Founding members list free, permanently.</h3>
+        <p>SpecGrid is onboarding its first 100 electrical &amp; electronics manufacturers in Coimbatore this month. Early listings are free for life — no BuyLead credits, no shared enquiries.</p>
+      </div>
+      <a href="#" id="signup-link" class="btn btn-primary">Register your company →</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-row">
+    <div class="mono">SpecGrid · Built in Coimbatore · Est. 2026</div>
+    <div class="mono">Meeting at Elektrotec 2026, CODISSIA Trade Fair Complex</div>
+  </div>
+</footer>
+
+<script>
+  const buttons = document.querySelectorAll('.filter-btn');
+  const cards = document.querySelectorAll('.spec-card');
+  buttons.forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      buttons.forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const f = btn.dataset.f;
+      cards.forEach(c=>{
+        c.style.display = (f==='all' || c.dataset.cat===f) ? 'flex' : 'none';
+      });
+    });
+  });
+
+  // Replace this href with your real Google Form link before the expo.
+  document.getElementById('signup-link').setAttribute('href', 'https://forms.gle/REPLACE-WITH-YOUR-FORM');
+</script>
+
+</body>
+</html>

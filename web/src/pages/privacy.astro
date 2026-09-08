@@ -1,0 +1,168 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Privacy Policy — SpecGrid"
+  description="Privacy Policy for SpecGrid, India's technical manufacturer directory."
+  canonicalPath="/privacy"
+>
+  <article class="doc-page">
+    <div class="wrap">
+      <header class="doc-header">
+        <div class="titleblock" style="margin-bottom: 24px;">
+          <div>Document<strong>DOC-REF // PRIVACY-2026-08</strong></div>
+          <div>Standard<strong>Data Minimization / Privacy First</strong></div>
+          <div>Effective<strong>August 2026</strong></div>
+          <div>Platform<strong>specgrid.in</strong></div>
+        </div>
+
+        <div class="tag" style="margin-bottom: 14px;">
+          <span class="dot"></span>
+          <span>Privacy &amp; Data Protection</span>
+        </div>
+
+        <h1 class="doc-title">Privacy Policy</h1>
+        <div class="doc-meta mono">Last updated: August 2026</div>
+      </header>
+
+      <div class="doc-content">
+        <section class="doc-section">
+          <div class="section-tag mono">§ 01 // Collection Scope</div>
+          <h2>What we collect</h2>
+          <p>
+            <strong>Directly from you:</strong> your email, name, and any details you submit through an enquiry, claim, or contact form.
+          </p>
+          <p>
+            <strong>Automatically:</strong> basic device and usage data (via privacy-preserving Cloudflare Web Analytics — no cookies, no cross-site tracking today). If cookie-based analytics (PostHog, GA4) are added later, they will only fire after you consent via a cookie banner.
+          </p>
+          <p>
+            <strong>From public sources:</strong> for draft profiles, company information gathered from public websites and directories (see the <a href="/data-disclaimer" class="doc-link">Data Disclaimer</a>).
+          </p>
+        </section>
+
+        <section class="doc-section">
+          <div class="section-tag mono">§ 02 // Processing Purpose</div>
+          <h2>How we use it</h2>
+          <p>
+            To route enquiries between buyers and suppliers, operate and improve the directory, and respond to correction or removal requests. We do not sell your data to third parties.
+          </p>
+        </section>
+
+        <section class="doc-section">
+          <div class="section-tag mono">§ 03 // Third-Party Disclosures</div>
+          <h2>Who we share it with</h2>
+          <p>
+            Infrastructure providers only, to operate the service: Cloudflare (hosting, database, storage). We do not resell or share enquiry data with other suppliers or advertisers.
+          </p>
+        </section>
+
+        <section class="doc-section">
+          <div class="section-tag mono">§ 04 // Data Lifecycle</div>
+          <h2>Retention</h2>
+          <p>
+            Enquiry and account data is kept as long as needed to operate the service, or until you request deletion.
+          </p>
+        </section>
+
+        <section class="doc-section contact-panel">
+          <div class="section-tag mono">§ 05 // Individual Rights</div>
+          <h2>Your rights</h2>
+          <p>
+            You can request access, correction, or deletion of your data, or of a company profile describing your business, by emailing:
+          </p>
+          <div style="margin-top: 14px;">
+            <a href="mailto:mathi@specgrid.in" class="btn btn-primary">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+              </svg>
+              mathi@specgrid.in
+            </a>
+          </div>
+        </section>
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .doc-page {
+    padding: 56px 0 72px;
+  }
+
+  .doc-header {
+    margin-bottom: 40px;
+    border-bottom: 1px solid var(--paper-line);
+    padding-bottom: 32px;
+  }
+
+  .doc-title {
+    font-size: clamp(32px, 4.5vw, 44px);
+    line-height: 1.1;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+
+  .doc-meta {
+    font-size: 12px;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .doc-content {
+    max-width: 720px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .doc-section {
+    position: relative;
+  }
+
+  .section-tag {
+    font-size: 11px;
+    color: var(--green);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .doc-section h2 {
+    font-size: 19px;
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+  }
+
+  .doc-section p {
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    line-height: 1.75;
+    margin-bottom: 12px;
+  }
+
+  .doc-section p:last-child {
+    margin-bottom: 0;
+  }
+
+  .doc-section strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .doc-link {
+    color: var(--green-deep);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-weight: 500;
+  }
+
+  .contact-panel {
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    padding: 24px 28px;
+    border-radius: var(--radius);
+  }
+</style>

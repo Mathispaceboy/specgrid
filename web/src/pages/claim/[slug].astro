@@ -1,0 +1,336 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const { slug } = Astro.params;
+
+if (!slug) {
+  return new Response("Not found", { status: 404 });
+}
+
+const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
+
+// Fetch company details
+let co = null;
+try {
+  const res = await fetch(`${API_BASE}/api/companies/${encodeURIComponent(slug)}`);
+  if (!res.ok) {
+    Astro.response.status = 404;
+  } else {
+    co = await res.json();
+  }
+} catch (e) {
+  Astro.response.status = 500;
+}
+
+const alreadyClaimed = co?.status === "claimed" || co?.status === "founding";
+const cleanWebsite = co?.website ? co.website.replace(/^https?:\/\//, "").replace(/\/$/, "") : "your company's listed website";
+---
+
+{co ? (
+  <BaseLayout
+    title={`Claim ${co.name} — SpecGrid`}
+    description={`Claim and verify the SpecGrid profile for ${co.name}.`}
+    canonicalPath={`/claim/${slug}`}
+  >
+    <div class="form-page wrap">
+      <!-- Back Link -->
+      <div class="form-nav">
+        <a href={`/companies/${slug}`} class="back-link mono">&larr; Back to {co.name}</a>
+      </div>
+
+      <div class="claim-card">
+        <div class="titleblock" style="margin-bottom: 24px;">
+          <div>Verification<strong>Domain &middot; Manual Review</strong></div>
+          <div>Company<strong>{co.name}</strong></div>
+          <div>Control<strong>Specs &middot; Certs &middot; Inquiries</strong></div>
+          <div>Cost<strong>Free For Life</strong></div>
+        </div>
+
+        <div class="tag" style="margin-bottom: 12px;">
+          <span class="dot"></span>
+          <span>Supplier Identity Verification</span>
+        </div>
+
+        <h1 class="form-title">Claim {co.name}</h1>
+        <p class="form-sub">
+          {alreadyClaimed
+            ? "This profile has already been claimed."
+            : "Confirm it's your company and take control of the profile — edit specs, add certifications, and remove the draft badge."}
+        </p>
+
+        {alreadyClaimed ? (
+          <div class="already-claimed-box">
+            <p style="font-size: 14.5px; color: var(--ink-soft); line-height: 1.6;">
+              If this was a mistake, or you believe this claim was made in error, email <a href="mailto:mathi@specgrid.in" class="doc-link">mathi@specgrid.in</a>.
+            </p>
+          </div>
+        ) : (
+          <form id="claimForm" class="claim-form">
+            <div class="fld">
+              <label for="cname" class="fld-label mono">Your Name <span class="req">*</span></label>
+              <input id="cname" required class="fld-input" placeholder="e.g. Anand Sundaram" />
+            </div>
+
+            <div class="fld">
+              <label for="cemail" class="fld-label mono">Work Email <span class="req">*</span></label>
+              <input id="cemail" type="email" required class="fld-input" placeholder={`you@${cleanWebsite}`} />
+              <div class="fld-hint mono">
+                Use your company email address &mdash; if the domain matches <strong>{cleanWebsite}</strong>, your claim is approved instantly. Otherwise we review it by hand, usually within a day.
+              </div>
+            </div>
+
+            <div class="fld">
+              <label for="cgstin" class="fld-label mono">GSTIN <span class="opt">(optional)</span></label>
+              <input id="cgstin" maxlength="15" class="fld-input" placeholder="e.g. 33AAAAA0000A1Z5" />
+              <div class="fld-hint mono">
+                Format-checked only &mdash; we don't call the government GST database. Helps us process manual review faster.
+              </div>
+            </div>
+
+            <div class="fld">
+              <label for="ccin" class="fld-label mono">CIN <span class="opt">(optional)</span></label>
+              <input id="ccin" maxlength="21" class="fld-input" placeholder="e.g. U12345TN2020PTC123456" />
+            </div>
+
+            <div class="form-actions">
+              <button class="btn btn-primary submit-btn" type="submit">
+                <span>Submit claim</span> &rarr;
+              </button>
+            </div>
+
+            <div id="claimMsg" class="form-msg"></div>
+          </form>
+        )}
+      </div>
+    </div>
+  </BaseLayout>
+) : (
+  <BaseLayout
+    title="Not found — SpecGrid"
+    description="This page could not be found."
+    canonicalPath="/404"
+  >
+    <div class="wrap notfound-wrap">
+      <h1>Supplier not found</h1>
+      <p style="color: var(--ink-soft); margin: 12px 0 24px;">The supplier you are trying to claim does not exist.</p>
+      <a href="/search" class="btn btn-primary">Back to Directory &rarr;</a>
+    </div>
+  </BaseLayout>
+)}
+
+<script is:inline define:vars={{ slug, API_BASE }}>
+  const form = document.getElementById("claimForm");
+  if (form) {
+    form.addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const btn = form.querySelector("button[type='submit']");
+      const msg = document.getElementById("claimMsg");
+
+      btn.disabled = true;
+      btn.textContent = "Submitting…";
+      msg.className = "form-msg";
+
+      try {
+        const payload = {
+          companySlug: slug,
+          name: document.getElementById("cname").value,
+          workEmail: document.getElementById("cemail").value,
+          gstin: document.getElementById("cgstin").value || null,
+          cin: document.getElementById("ccin").value || null
+        };
+
+        const res = await fetch(API_BASE + "/api/claim", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          msg.className = "form-msg err";
+          msg.textContent = data.error || "Something went wrong — please try again or email mathi@specgrid.in.";
+          btn.disabled = false;
+          btn.innerHTML = "<span>Submit claim</span> &rarr;";
+          return;
+        }
+
+        msg.className = "form-msg ok";
+        msg.textContent = data.message + (data.claimId ? " Claim ID: " + data.claimId : "");
+        form.querySelectorAll("input, button").forEach(el => el.disabled = true);
+
+        try {
+          if (window.__sg) {
+            window.__sg.track("claim_submitted", slug, { status: data.status });
+            window.__sg.identify(document.getElementById("cemail").value);
+          }
+        } catch(err) {}
+      } catch (err) {
+        msg.className = "form-msg err";
+        msg.textContent = "Network error — please check your connection and try again or email mathi@specgrid.in.";
+        btn.disabled = false;
+        btn.innerHTML = "<span>Submit claim</span> &rarr;";
+      }
+    });
+  }
+</script>
+
+<style>
+  .form-page {
+    padding: 36px 24px 64px;
+  }
+
+  .form-nav {
+    margin-bottom: 20px;
+  }
+
+  .back-link {
+    font-size: 13px;
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  .back-link:hover {
+    color: var(--ink);
+  }
+
+  .claim-card {
+    max-width: 580px;
+    margin: 0 auto;
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 32px;
+    box-shadow: 0 1px 4px rgba(20, 36, 46, 0.04);
+  }
+
+  .form-title {
+    font-size: 24px;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+
+  .form-sub {
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    margin-bottom: 26px;
+  }
+
+  .already-claimed-box {
+    border: 1px solid var(--paper-line);
+    background: var(--paper);
+    padding: 20px;
+    border-radius: var(--radius);
+  }
+
+  .doc-link {
+    color: var(--green-deep);
+    text-decoration: underline;
+    font-weight: 500;
+  }
+
+  .claim-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .fld {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .fld-label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .req {
+    color: var(--copper);
+  }
+
+  .opt {
+    color: var(--ink-faint);
+    text-transform: none;
+    font-weight: 400;
+  }
+
+  .fld-input {
+    width: 100%;
+    padding: 11px 13px;
+    font-size: 14.5px;
+    border: 1px solid var(--paper-line);
+    border-radius: var(--radius);
+    background: var(--paper);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s ease;
+    font-family: var(--font-body);
+  }
+
+  .fld-input:focus {
+    border-color: var(--ink);
+    background: #fff;
+  }
+
+  .fld-hint {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin-top: 4px;
+  }
+
+  .fld-hint strong {
+    color: var(--ink);
+  }
+
+  .form-actions {
+    margin-top: 10px;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 13px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .form-msg {
+    margin-top: 14px;
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    font-size: 13.5px;
+    line-height: 1.5;
+    display: none;
+  }
+
+  .form-msg.ok {
+    background: var(--green-soft);
+    border: 1px solid rgba(31, 111, 74, 0.4);
+    color: var(--green-deep);
+    display: block;
+  }
+
+  .form-msg.err {
+    background: #FDF1EE;
+    border: 1px solid #E8B3A4;
+    color: #A3402A;
+    display: block;
+  }
+
+  .notfound-wrap {
+    padding: 64px 24px;
+    text-align: center;
+  }
+
+  @media (max-width: 600px) {
+    .claim-card {
+      padding: 24px 20px;
+    }
+  }
+</style>

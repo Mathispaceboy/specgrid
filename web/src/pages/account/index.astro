@@ -1,0 +1,352 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const CLERK_PUBLISHABLE_KEY = "pk_test_YnVzeS1jcmlja2V0LTExMzMuY2xlcmsuYWNjb3VudHMuZGV2JA";
+const CLERK_FRONTEND_API = "https://busy-cricket-1133.clerk.accounts.dev";
+const API_BASE = "https://specgrid-api.mathispaceboy.workers.dev";
+---
+
+<BaseLayout
+  title="Account — SpecGrid"
+  description="Sign in to manage your claimed SpecGrid profile and view buyer enquiries."
+  canonicalPath="/account"
+>
+  <div class="account-page wrap">
+    <div class="titleblock" style="margin-bottom: 24px;">
+      <div>Portal<strong>Supplier Self-Service</strong></div>
+      <div>Access<strong>Clerk Secure Identity</strong></div>
+      <div>Telemetry<strong>Buyer Inquiries &middot; Profile Management</strong></div>
+      <div>Status<strong>Production</strong></div>
+    </div>
+
+    <!-- Sign In Container (when logged out) -->
+    <div id="clerkRoot" class="auth-box"></div>
+
+    <!-- Authenticated Dashboard Container (when logged in) -->
+    <div id="dashboard" class="dashboard-box" style="display: none;"></div>
+
+    <p id="clerkLoading" class="mono loading-text">Initializing secure session&hellip;</p>
+  </div>
+</BaseLayout>
+
+<script is:inline define:vars={{ CLERK_PUBLISHABLE_KEY, CLERK_FRONTEND_API, API_BASE }}>
+  (function(){
+    function esc(s){
+      return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+        return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+      });
+    }
+
+    var s = document.createElement("script");
+    s.setAttribute("data-clerk-publishable-key", CLERK_PUBLISHABLE_KEY);
+    s.src = CLERK_FRONTEND_API + "/npm/@clerk/clerk-js@5/dist/clerk.browser.js";
+    s.async = true;
+    s.crossOrigin = "anonymous";
+
+    s.addEventListener("load", async function(){
+      try {
+        await window.Clerk.load();
+        var loadEl = document.getElementById("clerkLoading");
+        if (loadEl) loadEl.style.display = "none";
+        render();
+        window.Clerk.addListener(function(){ render(); });
+      } catch(e) {
+        var loadEl = document.getElementById("clerkLoading");
+        if (loadEl) loadEl.textContent = "Could not load sign-in. Please refresh.";
+      }
+    });
+
+    s.addEventListener("error", function(){
+      var loadEl = document.getElementById("clerkLoading");
+      if (loadEl) loadEl.textContent = "Could not load sign-in. Please refresh.";
+    });
+
+    document.head.appendChild(s);
+
+    function render(){
+      var root = document.getElementById("clerkRoot");
+      var dash = document.getElementById("dashboard");
+      if (!root || !dash) return;
+
+      if (window.Clerk.user) {
+        root.style.display = "none";
+        root.innerHTML = "";
+        dash.style.display = "block";
+        loadDashboard();
+      } else {
+        dash.style.display = "none";
+        root.style.display = "block";
+        window.Clerk.mountSignIn(root);
+      }
+    }
+
+    async function loadDashboard(){
+      var dash = document.getElementById("dashboard");
+      var email = window.Clerk.user.primaryEmailAddress ? window.Clerk.user.primaryEmailAddress.emailAddress : "";
+      
+      try {
+        if (window.__sg) {
+          window.__sg.track("account_view");
+          if (email) window.__sg.identify(email);
+        }
+      } catch(e) {}
+
+      dash.innerHTML =
+        '<div class="dash-user-bar">' +
+          '<div>' +
+            '<div class="tag" style="margin-bottom: 6px;"><span class="dot"></span><span>Authenticated Session</span></div>' +
+            '<div class="user-email mono">Signed in as <strong>' + esc(email) + '</strong></div>' +
+          '</div>' +
+          '<div id="userBtn"></div>' +
+        '</div>' +
+        '<div id="dashBody" class="mono loading-sub">Loading your companies&hellip;</div>';
+
+      window.Clerk.mountUserButton(document.getElementById("userBtn"));
+
+      try {
+        var token = await window.Clerk.session.getToken();
+        var res = await fetch(API_BASE + "/api/my-enquiries", {
+          headers: { Authorization: "Bearer " + token }
+        });
+        var data = await res.json();
+        var el = document.getElementById("dashBody");
+        if (!el) return;
+
+        if (!res.ok) {
+          el.innerHTML = '<div class="alert-box err mono">' + esc(data.error || "Something went wrong loading your account.") + '</div>';
+          return;
+        }
+
+        if (!data.companies || !data.companies.length) {
+          el.innerHTML =
+            '<div class="empty-portal-card">' +
+              '<div class="empty-tag mono">NO PROFILES LINKED</div>' +
+              '<p>No claimed companies on this account yet. If you already claimed a profile, make sure you\'re signed in with the same email you used to claim it — or <a href="/search" class="dash-link">find your company</a> to claim it now.</p>' +
+            '</div>';
+          return;
+        }
+
+        var html =
+          '<div class="portal-section">' +
+            '<div class="section-label mono">Linked Manufacturer Profiles</div>' +
+            '<div class="companies-stack">';
+
+        data.companies.forEach(function(c){
+          html +=
+            '<a class="company-edit-card" href="/account/edit/' + esc(c.slug) + '">' +
+              '<div>' +
+                '<div class="co-name">' + esc(c.name) + '</div>' +
+                '<div class="co-slug mono">specgrid.in/companies/' + esc(c.slug) + '</div>' +
+              '</div>' +
+              '<div class="btn btn-dark btn-sm">Edit profile &rarr;</div>' +
+            '</a>';
+        });
+
+        html +=
+          '</div></div>' +
+          '<div class="portal-section">' +
+            '<div class="section-label mono">Direct Buyer Enquiries</div>';
+
+        if (!data.results || !data.results.length) {
+          html +=
+            '<div class="empty-portal-card">' +
+              '<div class="empty-tag mono">ZERO INQUIRIES</div>' +
+              '<p>No enquiries yet. When a buyer contacts you through SpecGrid, it will show up here.</p>' +
+            '</div>';
+        } else {
+          html += '<div class="enquiries-stack">';
+          data.results.forEach(function(e){
+            html +=
+              '<div class="enquiry-card">' +
+                '<div class="enq-top">' +
+                  '<div>' +
+                    '<div class="enq-buyer">' + esc(e.buyerName) + '</div>' +
+                    '<div class="enq-contact mono">' + esc(e.buyerEmail || e.buyerPhone || "Direct Buyer") + '</div>' +
+                  '</div>' +
+                  '<span class="badge badge-verified">' + esc(e.status) + '</span>' +
+                '</div>' +
+                (e.message ? '<div class="enq-message">' + esc(e.message) + '</div>' : '') +
+              '</div>';
+          });
+          html += '</div>';
+        }
+
+        html += '</div>';
+        el.innerHTML = html;
+      } catch(e) {
+        var el = document.getElementById("dashBody");
+        if (el) el.innerHTML = '<div class="alert-box err mono">Could not load your account data — please refresh.</div>';
+      }
+    }
+  })();
+</script>
+
+<style>
+  .account-page {
+    padding: 40px 24px 72px;
+  }
+
+  .auth-box {
+    max-width: 440px;
+    margin: 32px auto 0;
+  }
+
+  .dashboard-box {
+    max-width: 760px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .loading-text, .loading-sub {
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    margin: 24px 0;
+  }
+
+  :global(.dash-user-bar) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card);
+    border: 1px solid var(--paper-line);
+    padding: 20px 24px;
+    border-radius: var(--radius);
+  }
+
+  :global(.user-email) {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+  }
+
+  :global(.user-email strong) {
+    color: var(--ink);
+  }
+
+  :global(.portal-section) {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  :global(.section-label) {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--green);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  :global(.companies-stack), :global(.enquiries-stack) {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  :global(.company-edit-card) {
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s ease;
+  }
+
+  :global(.company-edit-card:hover) {
+    border-color: var(--ink);
+  }
+
+  :global(.co-name) {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 3px;
+  }
+
+  :global(.co-slug) {
+    font-size: 11.5px;
+    color: var(--ink-faint);
+  }
+
+  :global(.btn-sm) {
+    padding: 7px 13px;
+    font-size: 11.5px;
+  }
+
+  :global(.enquiry-card) {
+    border: 1px solid var(--paper-line);
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+  }
+
+  :global(.enq-top) {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  :global(.enq-buyer) {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--ink);
+  }
+
+  :global(.enq-contact) {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+
+  :global(.enq-message) {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    border-top: 1px dashed var(--paper-line);
+    padding-top: 10px;
+    margin-top: 8px;
+  }
+
+  :global(.empty-portal-card) {
+    border: 1px dashed var(--paper-line);
+    background: var(--card);
+    padding: 28px 24px;
+    border-radius: var(--radius);
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  :global(.empty-tag) {
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  :global(.dash-link) {
+    color: var(--green-deep);
+    text-decoration: underline;
+  }
+
+  :global(.alert-box) {
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    font-size: 13px;
+  }
+
+  :global(.alert-box.err) {
+    background: #FDF1EE;
+    border: 1px solid #E8B3A4;
+    color: #A3402A;
+  }
+</style>

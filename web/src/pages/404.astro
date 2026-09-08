@@ -1,0 +1,95 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Page Not Found — SpecGrid"
+  description="The requested industrial specification or resource could not be found."
+  canonicalPath="/404"
+>
+  <article class="doc-page">
+    <div class="wrap">
+      <header class="doc-header">
+        <div class="titleblock" style="margin-bottom: 24px;">
+          <div>Error Code<strong>STATUS // 404</strong></div>
+          <div>Signal<strong>RESOURCE_NOT_FOUND</strong></div>
+          <div>Resolution<strong>CHECK URL / DIRECTORY</strong></div>
+          <div>Index<strong>India Industrial Directory</strong></div>
+        </div>
+
+        <div class="tag" style="margin-bottom: 14px; border-color: rgba(226, 163, 59, 0.4); background: rgba(226, 163, 59, 0.08); color: var(--amber);">
+          <span class="dot" style="background: var(--amber);"></span>
+          <span>404 Specification Missing</span>
+        </div>
+
+        <h1 class="doc-title" style="font-size: clamp(2rem, 4vw, 3rem);">Document Not Located</h1>
+        <p class="doc-lead">
+          The requested page, company record, or document specification does not exist or has been relocated within the directory index.
+        </p>
+      </header>
+
+      <div class="doc-content">
+        <section class="doc-section" style="background: var(--paper-warm); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 28px; margin-bottom: 32px;">
+          <div class="section-tag mono">Suggested Actions</div>
+          <p style="font-size: 15px; color: var(--ink-soft); line-height: 1.6; margin-bottom: 20px;">
+            If you followed a link to a company profile or category, try searching our verified manufacturer database:
+          </p>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <a href="/search" class="btn btn-primary">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              Search Directory
+            </a>
+            <a href="/" class="btn btn-secondary">
+              Return to Homepage
+            </a>
+          </div>
+        </section>
+
+        <section class="doc-section">
+          <div class="section-tag mono">Report Missing Listing</div>
+          <p style="font-size: 14px; color: var(--ink-soft); line-height: 1.6;">
+            Are you looking for a specific manufacturer who should be indexed in SpecGrid? Contact us directly at <a href="mailto:mathi@specgrid.in" style="color: var(--green); text-decoration: underline; font-weight: 500;">mathi@specgrid.in</a>.
+          </p>
+        </section>
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .doc-page {
+    padding: 48px 0 80px;
+  }
+  .doc-header {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 32px;
+    margin-bottom: 40px;
+  }
+  .doc-title {
+    margin-top: 10px;
+    margin-bottom: 14px;
+    letter-spacing: -0.02em;
+  }
+  .doc-lead {
+    font-size: 16px;
+    color: var(--ink-soft);
+    line-height: 1.65;
+    max-width: 680px;
+  }
+  .doc-content {
+    max-width: 760px;
+  }
+  .doc-section {
+    margin-bottom: 32px;
+  }
+  .section-tag {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+</style>
