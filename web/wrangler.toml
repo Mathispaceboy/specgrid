@@ -3,6 +3,9 @@ main = "./dist/_worker.js/index.js"
 compatibility_date = "2026-08-01"
 compatibility_flags = ["nodejs_compat"]
 
+[build]
+command = "npm install && npm run build"
+
 [assets]
 directory = "./dist"
 binding = "ASSETS"

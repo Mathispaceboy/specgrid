@@ -4,11 +4,11 @@
   "compatibility_date": "2026-08-01",
   "compatibility_flags": ["nodejs_compat"],
   "build": {
-    "command": "test -d web && cd web; npm install && npm run build"
+    "command": "npm install && npm run build"
   },
-  "main": "./web/dist/_worker.js/index.js",
+  "main": "./dist/_worker.js/index.js",
   "assets": {
-    "directory": "./web/dist",
+    "directory": "./dist",
     "binding": "ASSETS"
   },
   "d1_databases": [
